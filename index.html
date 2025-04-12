@@ -2,15 +2,27 @@
 <html>
     <head>
         <link rel="stylesheet" href="styles.css" />
-        <script src="main.js" type="text/javascript"></script>
     </head>
     <body>
         <div>A ERD tool</div>
         <div>
-            <button>ENTITY</button>
+            <button id="entity-button" type="button">ENTITY</button>
         </div>
-        <canvas id="erd-canvas">
+        <div style="display: flex;">
+            <canvas id="erd-canvas">
 
-        </canvas>
+            </canvas>
+            <div id="propertybox-container">
+                <table>
+                    <tr>
+                        <th>Name</th>
+                        <td><input id="erd-pb-entity-name" name="name"></input></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
     </body>
+    <script src="erd.js" type="text/javascript"></script>
+    <script src="main.js" type="text/javascript"></script>
 </html>
