@@ -7,8 +7,12 @@ function erdv_init() {
     
     const erdv = {
         /* events */
-        'on_creating_entity': function(x, y) {},
         'on_props_changed': function(props) {},
+        // event order: mouse_down, mouse_move(optional), move_up, click
+        on_canvas_click: function(x, y) {},
+        on_canvas_mouse_down: function (x, y) {},
+        on_canvas_mouse_move: function (x, y) {},
+        on_canvas_mouse_up: function (x, y) {},
 
         /* methods */
         draw_entity,
@@ -70,6 +74,18 @@ function erdv_init() {
 
     erd_canvas.addEventListener("click", ev => {
         erdv['on_canvas_click'](ev.offsetX, ev.offsetY);
+    });
+
+    erd_canvas.addEventListener('mousedown', ev => {
+        erdv['on_canvas_mouse_down'](ev.offsetX, ev.offsetY);
+    });
+
+    erd_canvas.addEventListener('mousemove', ev => {
+        erdv['on_canvas_mouse_move'](ev.offsetX, ev.offsetY);
+    });
+
+    erd_canvas.addEventListener('mouseup', ev => {
+        erdv['on_canvas_mouse_up'](ev.offsetX, ev.offsetY);
     });
 
     const entity_button = document.getElementById("entity-button")
