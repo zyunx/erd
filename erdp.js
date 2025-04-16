@@ -12,6 +12,7 @@ function erdp_create(erd, erdv)
     };
     var to_draw = null;
     const TO_DRAW_ENTITY = "ENTITY";
+    const TO_DRAW_RELATIONSHIP = "RELATIONSHIP";
 
     erdv['on_canvas_mouse_down'] = function(x, y)
     {
@@ -19,26 +20,31 @@ function erdp_create(erd, erdv)
         canvas_mouse_down = true;
 
         if (to_draw == null) {
-            const e = get_object_by_coordinate(erd, x, y)
-            if (e)
-            {
-                select_entity(e, {
-                    x: e['x']-x, 
-                    y: e['y']-y
-                });
-            }
-            else
+            const obj = get_object_by_coordinate(erd, x, y)
+            if (obj == null)
             {
                 object_selected = null;
                 erdv['hide_props']();
             }
-            return;
+            else
+            {
+                select_object(obj, {
+                    x: obj['x']-x, 
+                    y: obj['y']-y
+                });
+            }
         }
-
-        if (to_draw == TO_DRAW_ENTITY) {
-            draw_entity(x, y);            
+        else
+        {
+            if (to_draw == TO_DRAW_ENTITY) {
+                draw_entity(x, y);            
+            } else if (to_draw == TO_DRAW_RELATIONSHIP) {
+                draw_relationship(x, y);
+            }
             to_draw = null;
         }
+
+        
     };
 
     erdv['on_canvas_mouse_move'] = function(x, y)
@@ -61,6 +67,11 @@ function erdp_create(erd, erdv)
     erdv['on_entity_to_be_drawed'] = function()
     {
         to_draw = TO_DRAW_ENTITY;
+    }
+
+    erdv['on_relationship_to_be_drawed'] = function()
+    {
+        to_draw = TO_DRAW_RELATIONSHIP;
     }
 
     erdv['on_props_changed'] = function(props) 
@@ -87,19 +98,36 @@ function erdp_create(erd, erdv)
             name: e['name']
         });
 
-        select_entity(e, {
+        select_object(e, {
             x: -erd['entity.width']/2, 
             y: -erd['entity.height']/2,
         });
     };
 
-    function select_entity(e, shape_mouse_offset)
+    function draw_relationship(px, py)
     {
-        object_selected = e;
+        const r = erd_create_relationship(erd, px, py);
+
+        erdv['draw_relationship']({
+            x: r['x'],
+            y: r['y'],
+            width: r['width'],
+            height: r['height'],
+            name: r['name']
+        });
+
+        select_object(r, {
+            x: 0, y: 0,
+        });
+    }
+
+    function select_object(obj, shape_mouse_offset)
+    {
+        object_selected = obj;
         selected_shape_mouse_offset = shape_mouse_offset;
 
         erdv['show_props']({
-            name: e['name'],
+            name: obj['name'],
         });
     }
 
@@ -115,7 +143,11 @@ function erdp_create(erd, erdv)
                 height: e['height'],
                 name: e['name'],
             })
-            
+        }
+
+        for (let i = 0; i < erd["relationships"].length; i++) {
+            const r = erd["relationships"][i];
+            erdv['draw_relationship'](r);
         }
     }
 
