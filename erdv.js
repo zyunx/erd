@@ -85,8 +85,65 @@ function erdv_init() {
     function show_props(e)
     {
         const propertybox_container = document.getElementById('propertybox-container');
-        propertybox_container.querySelector("input[name=name]").value = e['name']
+        while (propertybox_container.firstChild) {
+            propertybox_container.removeChild(propertybox_container.firstChild);
+        }
+        if (e['type'] == 'entity_set')
+        {
+            propertybox_container.appendChild(create_entity_set_propertybox(e));
+        } else if (e['type'] == 'relationship_set')
+        {
+            propertybox_container.appendChild(create_relationship_set_propertybox(e));
+        }
         propertybox_container.style.visibility = 'visible';
+    }
+
+    function create_entity_set_propertybox(e)
+    {
+        const box = document.createElement('div');
+
+        const props_tab = document.createElement('table');
+        const props_tr = document.createElement('tr');
+        const props_name = document.createElement('th');
+        props_name.innerText = 'Name';
+        const props_value = document.createElement('td');
+        const props_name_input = document.createElement('input');
+        props_name_input.value = e['name'];
+        props_name_input.addEventListener('input', ev => {
+            erdv['on_props_changed']({
+                name: props_name_input.value
+            });
+        });
+        props_value.appendChild(props_name_input);
+        props_tr.appendChild(props_name);
+        props_tr.appendChild(props_value);
+        props_tab.appendChild(props_tr);
+        box.appendChild(props_tab);
+        return box;
+    }
+
+    function create_relationship_set_propertybox(e)
+    {
+        const box = document.createElement('div');
+
+        const props_tab = document.createElement('table');
+        const props_tr = document.createElement('tr');
+        const props_name = document.createElement('th');
+        props_name.innerText = 'Name';
+        const props_value = document.createElement('td');
+        const props_name_input = document.createElement('input');
+        props_name_input.value = e['name'];
+        props_name_input.addEventListener('input', ev => {
+            erdv['on_props_changed']({
+                name: props_name_input.value
+            });
+        });
+        props_value.appendChild(props_name_input);
+        props_tr.appendChild(props_name);
+        props_tr.appendChild(props_value);
+        props_tab.appendChild(props_tr);
+        box.appendChild(props_tab);
+        return box;
     }
 
     function hide_props()
@@ -101,19 +158,6 @@ function erdv_init() {
     erd_canvas.height = 800;
     const erd_canvas_ctx = erd_canvas.getContext("2d");
     erd_canvas_ctx.font = "20px serif";
-
-    function init_erd_property_boxes() {
-        const erd_pb_entity_name = document.getElementById('erd-pb-entity-name');
-        erd_pb_entity_name.addEventListener('input', ev => {
-            erdv['on_props_changed']({
-                name: erd_pb_entity_name.value
-            });
-        });
-
-        hide_props();
-    }
-
-    init_erd_property_boxes();
     
 
     erd_canvas.addEventListener("click", ev => {

@@ -125,9 +125,7 @@ function erdp_create(erd, erdv)
         object_selected = obj;
         selected_shape_mouse_offset = shape_mouse_offset;
 
-        erdv['show_props']({
-            name: obj['name'],
-        });
+        erdv['show_props'](obj);
     }
 
     function update()
