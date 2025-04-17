@@ -3,8 +3,8 @@
  */
 
 const erd_config = {
-    'entity.width': 100,
-    'entity.height': 50,
+    'entity_set.width': 100,
+    'entity_set.height': 50,
 };
 
 function erd_create()
@@ -12,52 +12,51 @@ function erd_create()
     return {
         "width": 1000,
         "height": 1000,
-        'entity.width' : erd_config['entity.width'],
-        'entity.height': erd_config['entity.height'],
-        'relationship.width': 140,
-        'relationship.height': 70,
-        "entities": [],
-        "relationships": [],
+        'entity_set.width' : erd_config['entity_set.width'],
+        'entity_set.height': erd_config['entity_set.height'],
+        'relationship_set.width': 140,
+        'relationship_set.height': 70,
+        "entity_sets": [],
+        "relationship_sets": [],
     };
 }
 
-function erd_create_entity(erd, x = 0, y = 0)
+function erd_create_entity_set(erd, x = 0, y = 0)
 {
-    return {
+    const e = {
         "x": x,
         "y": y,
-        "width": erd['entity.width'],
-        "height": erd['entity.height'],
+        "width": erd['entity_set.width'],
+        "height": erd['entity_set.height'],
         "name": "Entity",
-        "type": "entity",
-    }
+        "type": "entity_set",
+    };
+
+    erd['entity_sets'].push(e);
+    return e;
 }
 
-function erd_add_entity(erd, entity) {
-    erd["entities"].push(entity);
-}
-
-function erd_create_relationship(erd, x, y)
+function erd_create_relationship_set(erd, x, y)
 {
     // (x, y) is the center of the diamond
     const r = {
         x,
         y,
-        "width": erd['relationship.width'],
-        "height": erd['relationship.height'],
+        "width": erd['relationship_set.width'],
+        "height": erd['relationship_set.height'],
         "name": "Relationship",
-        "type": "relationship",
+        "type": "relationship_set",
     };
 
-    erd["relationships"].push(r);
+    erd["relationship_sets"].push(r);
 
     return r;
 }
 
 function get_object_by_coordinate(erd, x, y)
 {
-    for (let i = 0; i < erd["entities"].length; i++) {
-        const e = erd["entities"][i];
+    for (let i = 0; i < erd["entity_sets"].length; i++) {
+        const e = erd["entity_sets"][i];
         const v = {
             x: x - e['x'],
             y: y - e['y'],
@@ -69,8 +68,8 @@ function get_object_by_coordinate(erd, x, y)
         }
     }
 
-    for (let i = 0; i < erd["relationships"].length; i++) {
-        const r = erd["relationships"][i];
+    for (let i = 0; i < erd["relationship_sets"].length; i++) {
+        const r = erd["relationship_sets"][i];
         // change pointer coordinate to be relative the relationship diamond center.
         const v = {
             x: x - r['x'],

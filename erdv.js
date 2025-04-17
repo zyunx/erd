@@ -8,8 +8,8 @@ function erdv_init() {
     const erdv = {
         /* events */
         /* for toolbar */
-        on_entity_to_be_drawed: function() {},
-        on_relationship_to_be_drawed: function() {},
+        on_entity_set_to_be_drawed: function() {},
+        on_relationship_set_to_be_drawed: function() {},
         /* for canvas */
         // event order: mouse_down, mouse_move(optional), move_up, click
         on_canvas_click: function(x, y) {},
@@ -20,8 +20,8 @@ function erdv_init() {
         'on_props_changed': function(props) {},
 
         /* methods */
-        draw_entity,
-        draw_relationship,
+        draw_entity_set,
+        draw_relationship_set,
         clear,
         show_props,
         hide_props,
@@ -32,7 +32,7 @@ function erdv_init() {
         erd_canvas_ctx.clearRect(0, 0, erd_canvas.width, erd_canvas.height);
     }
 
-    function draw_entity(e)
+    function draw_entity_set(e)
     {
         console.log('erdv: draw_entity');
         erd_canvas_ctx.strokeRect(e['x'], e['y'], e['width'], e['height']);
@@ -44,7 +44,7 @@ function erdv_init() {
         erd_canvas_ctx.fillText(e_name, font_x, font_y);
     }
 
-    function draw_relationship(r)
+    function draw_relationship_set(r)
     {
         console.log('erdv: draw_relationship', r);
 
@@ -137,12 +137,12 @@ function erdv_init() {
      */
     const entity_button = document.getElementById("entity-button")
     entity_button.addEventListener("click", ev => {
-        erdv['on_entity_to_be_drawed']();
+        erdv['on_entity_set_to_be_drawed']();
     });
 
     const relationship_button = document.getElementById("relationship-button")
     relationship_button.addEventListener("click", ev => {
-        erdv['on_relationship_to_be_drawed']();
+        erdv['on_relationship_set_to_be_drawed']();
     });
 
     return erdv;

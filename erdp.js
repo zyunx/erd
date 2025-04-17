@@ -11,8 +11,8 @@ function erdp_create(erd, erdv)
         y: 0,
     };
     var to_draw = null;
-    const TO_DRAW_ENTITY = "ENTITY";
-    const TO_DRAW_RELATIONSHIP = "RELATIONSHIP";
+    const TO_DRAW_ENTITY_SET = "ENTITY_SET";
+    const TO_DRAW_RELATIONSHIP_SET = "RELATIONSHIP_SET";
 
     erdv['on_canvas_mouse_down'] = function(x, y)
     {
@@ -36,10 +36,10 @@ function erdp_create(erd, erdv)
         }
         else
         {
-            if (to_draw == TO_DRAW_ENTITY) {
-                draw_entity(x, y);            
-            } else if (to_draw == TO_DRAW_RELATIONSHIP) {
-                draw_relationship(x, y);
+            if (to_draw == TO_DRAW_ENTITY_SET) {
+                draw_entity_set(x, y);            
+            } else if (to_draw == TO_DRAW_RELATIONSHIP_SET) {
+                draw_relationship_set(x, y);
             }
             to_draw = null;
         }
@@ -64,14 +64,14 @@ function erdp_create(erd, erdv)
         canvas_mouse_down = false;
     };
 
-    erdv['on_entity_to_be_drawed'] = function()
+    erdv['on_entity_set_to_be_drawed'] = function()
     {
-        to_draw = TO_DRAW_ENTITY;
+        to_draw = TO_DRAW_ENTITY_SET;
     }
 
-    erdv['on_relationship_to_be_drawed'] = function()
+    erdv['on_relationship_set_to_be_drawed'] = function()
     {
-        to_draw = TO_DRAW_RELATIONSHIP;
+        to_draw = TO_DRAW_RELATIONSHIP_SET;
     }
 
     erdv['on_props_changed'] = function(props) 
@@ -83,14 +83,13 @@ function erdp_create(erd, erdv)
         }
     }
 
-    function draw_entity(px, py)
+    function draw_entity_set(px, py)
     {
-        const x = px - erd['entity.width']/2;
-        const y = py - erd['entity.height']/2;
-        const e = erd_create_entity(erd, x, y);
-        erd_add_entity(erd, e);
+        const x = px - erd['entity_set.width']/2;
+        const y = py - erd['entity_set.height']/2;
+        const e = erd_create_entity_set(erd, x, y);
 
-        erdv['draw_entity']({
+        erdv['draw_entity_set']({
             x,
             y,
             width: e['width'],
@@ -99,16 +98,16 @@ function erdp_create(erd, erdv)
         });
 
         select_object(e, {
-            x: -erd['entity.width']/2, 
-            y: -erd['entity.height']/2,
+            x: -erd['entity_set.width']/2, 
+            y: -erd['entity_set.height']/2,
         });
     };
 
-    function draw_relationship(px, py)
+    function draw_relationship_set(px, py)
     {
-        const r = erd_create_relationship(erd, px, py);
+        const r = erd_create_relationship_set(erd, px, py);
 
-        erdv['draw_relationship']({
+        erdv['draw_relationship_set']({
             x: r['x'],
             y: r['y'],
             width: r['width'],
@@ -134,9 +133,9 @@ function erdp_create(erd, erdv)
     function update()
     {
         erdv['clear']();
-        for (let i = 0; i < erd["entities"].length; i++) {
-            const e = erd["entities"][i];
-            erdv['draw_entity']({
+        for (let i = 0; i < erd["entity_sets"].length; i++) {
+            const e = erd["entity_sets"][i];
+            erdv['draw_entity_set']({
                 x: e['x'],
                 y: e['y'],
                 width: e['width'],
@@ -145,12 +144,9 @@ function erdp_create(erd, erdv)
             })
         }
 
-        for (let i = 0; i < erd["relationships"].length; i++) {
-            const r = erd["relationships"][i];
-            erdv['draw_relationship'](r);
+        for (let i = 0; i < erd["relationship_sets"].length; i++) {
+            const r = erd["relationship_sets"][i];
+            erdv['draw_relationship_set'](r);
         }
     }
-
-    
-
 }
