@@ -24,7 +24,7 @@ function erdp_create(erd, erdv)
             if (obj == null)
             {
                 object_selected = null;
-                erdv['hide_props']();
+                hide_object_props();
             }
             else
             {
@@ -79,8 +79,19 @@ function erdp_create(erd, erdv)
         if (object_selected)
         {
             object_selected['name'] = props['name'];
-            update();
+            update_canvas();
         }
+    }
+
+    erdv['on_relationship_set_add_role'] = function(entity_set_name, role_name, role_multiplicity)
+    {
+        console.log('on_relationship_set_add_role', entity_set_name, role_name, role_multiplicity);
+        const relationship_set = get_relationship_set_by_name(erd, object_selected['name']);
+        const entity_set = get_entity_set_by_name(erd, entity_set_name);
+        
+        erd_relationship_set_add_role(erd, relationship_set, entity_set, role_name, role_multiplicity);
+
+        update();
     }
 
     function draw_entity_set(px, py)
@@ -125,10 +136,28 @@ function erdp_create(erd, erdv)
         object_selected = obj;
         selected_shape_mouse_offset = shape_mouse_offset;
 
-        erdv['show_props'](obj);
+        show_object_props(obj);
+        
     }
 
-    function update()
+    function show_object_props(obj)
+    {
+        if (obj['type'] == 'entity_set')
+        {
+            erdv['show_entity_set_properties'](obj);
+        }
+        else if (obj['type'] == 'relationship_set')
+        {
+            erdv['show_relationship_set_properties'](obj, erd['entity_sets']);
+        }
+    }
+
+    function hide_object_props()
+    {
+        erdv['hide_props']();
+    }
+
+    function update_canvas()
     {
         erdv['clear']();
         for (let i = 0; i < erd["entity_sets"].length; i++) {
@@ -145,6 +174,20 @@ function erdp_create(erd, erdv)
         for (let i = 0; i < erd["relationship_sets"].length; i++) {
             const r = erd["relationship_sets"][i];
             erdv['draw_relationship_set'](r);
+        }
+    }
+
+    function update()
+    {
+        update_canvas();
+
+        if (object_selected)
+        {
+            show_object_props(object_selected);
+        }
+        else
+        {
+            hide_object_props();
         }
     }
 }

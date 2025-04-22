@@ -46,11 +46,45 @@ function erd_create_relationship_set(erd, x, y)
         "height": erd['relationship_set.height'],
         "name": "Relationship",
         "type": "relationship_set",
+        'roles': [],
     };
 
     erd["relationship_sets"].push(r);
 
     return r;
+}
+
+function erd_relationship_set_add_role(erd, relationship_set, entity_set, role_name, role_multiplicity)
+{
+    relationship_set['roles'].push({
+        entity_set,
+        role_name,
+        role_multiplicity,
+    });
+}
+
+function get_relationship_set_by_name(erd, name)
+{
+    for (const r of erd['relationship_sets'])
+    {
+        if (r['name'] == name)
+        {
+            return r;
+        }
+    }
+    return null;
+}
+
+function get_entity_set_by_name(erd, name)
+{
+    for (const e of erd['entity_sets'])
+        {
+            if (e['name'] == name)
+            {
+                return e;
+            }
+        }
+        return null;
 }
 
 function get_object_by_coordinate(erd, x, y)
