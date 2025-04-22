@@ -54,7 +54,7 @@ function erdp_create(erd, erdv)
             object_selected['x'] = x + selected_shape_mouse_offset['x'];
             object_selected['y'] = y + selected_shape_mouse_offset['y'];
 
-            update();
+            update_canvas();
         }
     };
 
@@ -94,10 +94,8 @@ function erdp_create(erd, erdv)
         update();
     }
 
-    function draw_entity_set(px, py)
+    function draw_entity_set(x, y)
     {
-        const x = px - erd['entity_set.width']/2;
-        const y = py - erd['entity_set.height']/2;
         const e = erd_create_entity_set(erd, x, y);
 
         erdv['draw_entity_set']({
@@ -105,12 +103,12 @@ function erdp_create(erd, erdv)
             y,
             width: e['width'],
             height: e['height'],
-            name: e['name']
+            name: e['name'],
         });
 
         select_object(e, {
-            x: -erd['entity_set.width']/2, 
-            y: -erd['entity_set.height']/2,
+            x: 0, 
+            y: 0,
         });
     };
 
@@ -123,7 +121,8 @@ function erdp_create(erd, erdv)
             y: r['y'],
             width: r['width'],
             height: r['height'],
-            name: r['name']
+            name: r['name'],
+            roles: r['roles'],
         });
 
         select_object(r, {

@@ -23,6 +23,7 @@ function erd_create()
 
 function erd_create_entity_set(erd, x = 0, y = 0)
 {
+    // (x, y) is the center of the rectangle
     const e = {
         "x": x,
         "y": y,
@@ -95,8 +96,10 @@ function get_object_by_coordinate(erd, x, y)
             x: x - e['x'],
             y: y - e['y'],
         }
-        if (v['x'] > 0 && v['x'] < e['width']
-            && v['y'] > 0 && v['y'] < e['height'])
+        const rx = e['width']/2;
+        const ry = e['height']/2;
+        if (v['x'] > -rx && v['x'] < rx
+            && v['y'] > -ry && v['y'] < ry)
         {
             return e;
         }

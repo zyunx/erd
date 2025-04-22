@@ -37,12 +37,13 @@ function erdv_init() {
     function draw_entity_set(e)
     {
         console.log('erdv: draw_entity');
-        erd_canvas_ctx.strokeRect(e['x'], e['y'], e['width'], e['height']);
+        const x1 = e['x'] - e['width']/2;
+        const y1 = e['y'] - e['height']/2;
+        erd_canvas_ctx.strokeRect(x1, y1, e['width'], e['height']);
         const e_name = e['name'];
         const text_g = erd_canvas_ctx.measureText(e_name);
-        const font_x = (e['width'] - text_g.width)/2 + e['x'];
-        const font_y = 30  + e['y'];
-        console.log(e['x'], e['y'], font_x, font_y);
+        const font_x = e['x'] - text_g.width/2;
+        const font_y = e['y'] + 6;
         erd_canvas_ctx.fillText(e_name, font_x, font_y);
     }
 
@@ -82,6 +83,14 @@ function erdv_init() {
         const font_x = r['x'] - text_g.width/2;
         const font_y = r['y'] + 6;
         erd_canvas_ctx.fillText(r_name, font_x, font_y);
+
+        for (const role of r['roles'])
+        {
+            erd_canvas_ctx.beginPath();
+            erd_canvas_ctx.moveTo(r['x'], r['y']);
+            erd_canvas_ctx.lineTo(role['entity_set']['x'], role['entity_set']['y']);
+            erd_canvas_ctx.stroke();
+        }
     }
 
     function _show_props(property_box)
