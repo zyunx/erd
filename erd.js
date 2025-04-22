@@ -55,12 +55,76 @@ function erd_create_relationship_set(erd, x, y)
     return r;
 }
 
+function erd_compute_role_anchor(erd, relationship_set, entity_set)
+{
+    // compute anchor
+    // entity set relative position to relationship set
+    const x = entity_set['x'] - relationship_set['x'];
+    const y = entity_set['y'] - relationship_set['y'];
+
+    let ra = [0, 0];
+    let ea = [0, 0];
+
+    if (x == 0)
+    {
+        // on the y axis
+        if (y > 0)
+        {
+            ra = [0, 1]
+            ea = [0, -1]
+        }
+        else
+        {
+            ra = [0, -1]
+            ea = [0, 1]
+        }
+    } 
+    else if (Math.abs(y/x) > 1) {
+        if (y > 0)
+        {
+            ra = [0, 1]
+            ea = [0, -1]
+        }
+        else
+        {
+            ra = [0, -1]
+            ea = [0, 1]
+        }
+    } else {
+        if (x > 0)
+        {
+            ra = [1, 0]
+            ea = [-1, 0]
+        }
+        else
+        {
+            ra = [-1, 0]
+            ea = [1, 0]
+        }
+    }
+
+    return {
+        relationship_set_anchor: {
+            x: ra[0],
+            y: ra[1],
+        },
+        entity_set_anchor: {
+            x: ea[0],
+            y: ea[1],
+        },
+    };
+}
+
 function erd_relationship_set_add_role(erd, relationship_set, entity_set, role_name, role_multiplicity)
 {
+    const anchors = erd_compute_role_anchor(erd, relationship_set, entity_set);
+
     relationship_set['roles'].push({
         entity_set,
         role_name,
         role_multiplicity,
+        relationship_set_anchor: anchors['relationship_set_anchor'],
+        entity_set_anchor: anchors['entity_set_anchor'],
     });
 }
 

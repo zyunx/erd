@@ -86,9 +86,14 @@ function erdv_init() {
 
         for (const role of r['roles'])
         {
+            const x1 = role['relationship_set_anchor']['x'] * r['width']/2 + r['x'];
+            const y1 = role['relationship_set_anchor']['y'] * r['height']/2 + r['y'];
+            const x2 = role['entity_set_anchor']['x'] * role['entity_set']['width']/2 + role['entity_set']['x'];
+            const y2 = role['entity_set_anchor']['y'] * role['entity_set']['height']/2 + role['entity_set']['y'];
+
             erd_canvas_ctx.beginPath();
-            erd_canvas_ctx.moveTo(r['x'], r['y']);
-            erd_canvas_ctx.lineTo(role['entity_set']['x'], role['entity_set']['y']);
+            erd_canvas_ctx.moveTo(x1, y1);
+            erd_canvas_ctx.lineTo(x2, y2);
             erd_canvas_ctx.stroke();
         }
     }
