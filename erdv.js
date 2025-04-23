@@ -43,8 +43,13 @@ function erdv_init() {
         const e_name = e['name'];
         const text_g = erd_canvas_ctx.measureText(e_name);
         const font_x = e['x'] - text_g.width/2;
-        const font_y = e['y'] + 6;
+        const font_y = e['y'] + _text_height(text_g)/2;
         erd_canvas_ctx.fillText(e_name, font_x, font_y);
+    }
+
+    function _text_height(text_measure)
+    {
+        return text_measure['actualBoundingBoxAscent'] - text_measure['actualBoundingBoxDescent'];
     }
 
     function draw_relationship_set(r)
@@ -81,7 +86,7 @@ function erdv_init() {
         const r_name = r['name'];
         const text_g = erd_canvas_ctx.measureText(r_name);
         const font_x = r['x'] - text_g.width/2;
-        const font_y = r['y'] + 6;
+        const font_y = r['y'] + _text_height(text_g)/2;
         erd_canvas_ctx.fillText(r_name, font_x, font_y);
 
         for (const role of r['roles'])
