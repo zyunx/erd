@@ -55,6 +55,39 @@ function erd_create_relationship_set(erd, x, y)
     return r;
 }
 
+function erd_move_relationship_set(erd, relationship_set, x, y)
+{
+    relationship_set['x'] = x;
+    relationship_set['y'] = y;
+    for (const role of relationship_set['roles'])
+    {
+        erd_update_role_anchors(erd, relationship_set, role);
+    }
+}
+
+function erd_move_entity_set(erd, entity_set, x, y)
+{
+    entity_set['x'] = x;
+    entity_set['y'] = y;
+    for (const rel of erd['relationship_sets'])
+    {
+        for (const role of rel['roles'])
+        {
+            if (role['entity_set'] === entity_set)
+            {
+                erd_update_role_anchors(erd, rel, role);
+            }
+        }
+    }
+}
+
+function erd_update_role_anchors(erd, relationship_set, role)
+{
+    const anchors = erd_compute_role_anchor(erd, relationship_set, role['entity_set']);
+    role['relationship_set_anchor'] = anchors['relationship_set_anchor'];
+    role['entity_set_anchor'] = anchors['entity_set_anchor'];
+}
+
 function erd_compute_role_anchor(erd, relationship_set, entity_set)
 {
     // compute anchor

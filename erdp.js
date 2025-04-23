@@ -51,8 +51,17 @@ function erdp_create(erd, erdv)
     {
         if (canvas_mouse_down && object_selected)
         {
-            object_selected['x'] = x + selected_shape_mouse_offset['x'];
-            object_selected['y'] = y + selected_shape_mouse_offset['y'];
+            const tx = x + selected_shape_mouse_offset['x'];
+            const ty = y + selected_shape_mouse_offset['y'];
+
+            if (object_selected['type'] == 'relationship_set')
+            {
+                erd_move_relationship_set(erd, object_selected, tx, ty)
+            }
+            else if (object_selected['type'] == 'entity_set')
+            {
+                erd_move_entity_set(erd, object_selected, tx, ty)
+            }
 
             update_canvas();
         }
