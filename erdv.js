@@ -91,10 +91,10 @@ function erdv_init() {
 
         for (const role of r['roles'])
         {
-            const x1 = role['relationship_set_anchor']['x'] * r['width']/2 + r['x'];
-            const y1 = role['relationship_set_anchor']['y'] * r['height']/2 + r['y'];
-            const x2 = role['entity_set_anchor']['x'] * role['entity_set']['width']/2 + role['entity_set']['x'];
-            const y2 = role['entity_set_anchor']['y'] * role['entity_set']['height']/2 + role['entity_set']['y'];
+            const x1 = role['relationship_set_endpoint']['x'];
+            const y1 = role['relationship_set_endpoint']['y'];
+            const x2 = role['entity_set_endpoint']['x'];
+            const y2 = role['entity_set_endpoint']['y'];
 
             erd_canvas_ctx.beginPath();
             erd_canvas_ctx.moveTo(x1, y1);
