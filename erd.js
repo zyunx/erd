@@ -89,11 +89,6 @@ function erd_update_role(erd, relationship_set, role)
     role['entity_set_endpoint'] = endpoints['entity_set_endpoint'];
 }
 
-function erd_compute_role_name_label_pos(erd, relationship_set, role)
-{
-
-}
-
 
 function erd_compute_role_endpoints(erd, relationship_set, entity_set)
 {

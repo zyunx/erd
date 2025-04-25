@@ -100,6 +100,123 @@ function erdv_init() {
             erd_canvas_ctx.moveTo(x1, y1);
             erd_canvas_ctx.lineTo(x2, y2);
             erd_canvas_ctx.stroke();
+
+            _draw_role_label(role);
+        }
+    }
+
+    function _draw_role_label(role)
+    {
+        const role_name = role['role_name'];
+        if (role_name)
+        {
+            const text_g = erd_canvas_ctx.measureText(role_name);
+            const label_pos = _role_name_label_bottom_center(role, text_g.width + 10, _text_height(text_g)+10);
+
+            console.log('_draw_role_label', label_pos);
+            erd_canvas_ctx.fillText(role_name, 
+                label_pos['x'] + 5, label_pos['y']-5);
+            
+        }
+    }
+
+    //fucntion _offset_role_name_label(role, )
+    function _role_name_label_bottom_center(role, text_width, text_height)
+    {
+        /*
+        * see internal/HowToPositionRoleNameLabel
+        */
+
+        const lb = {
+            x: (role['entity_set_endpoint']['x'] + role['relationship_set_endpoint']['x'])/2 - text_width/2,
+            y: (role['entity_set_endpoint']['y'] + role['relationship_set_endpoint']['y'])/2 + text_height/2,
+        };
+
+        const xr = role['entity_set_endpoint']['x'] - role['relationship_set_endpoint']['x'];
+        const yr = role['entity_set_endpoint']['y'] - role['relationship_set_endpoint']['y'];
+
+        let x2;
+        let y2;
+
+        if (xr == 0)
+        {
+            if (yr >= 0)
+            {
+                x2 = text_width/2;
+                y2 = 0;
+            }
+            else
+            {
+                x2 = -text_width/2;
+                y2 = 0;
+            }
+            
+            return {
+                x: x2 + lb['x'],
+                y: y2 + lb['y'],
+            };
+        }
+        else if (xr >= 0)
+        {
+            let k =  yr/(1.0 * xr);
+
+            if (yr < 0)
+            {
+                x1 = (text_width + k * text_height) / (2 * (k*k + 1));
+                y1 = k * x1;
+    
+                x2 = x1 - text_width/2;
+                y2 = y1 - text_height/2;
+    
+                return {
+                    x: x2 + lb['x'],
+                    y: y2 + lb['y'],
+                };
+            }
+            else 
+            {
+                x1 = (-text_width + k * text_height) / (2 * (k*k + 1));
+                y1 = k * x1;
+    
+                x2 = x1 + text_width/2;
+                y2 = y1 - text_height/2;
+    
+                return {
+                    x: x2 + lb['x'],
+                    y: y2 + lb['y'],
+                };
+            }
+        }
+        else
+        {
+            let k =  yr/(1.0 * xr);
+
+            if (yr < 0)
+            {
+                x1 = (text_width - k * text_height) / (2 * (k*k + 1));
+                y1 = k * x1;
+    
+                x2 = x1 - text_width/2;
+                y2 = y1 + text_height/2;
+    
+                return {
+                    x: x2 + lb['x'],
+                    y: y2 + lb['y'],
+                };
+            }
+            else 
+            {
+                x1 = (-text_width - k * text_height) / (2 * (k*k + 1));
+                y1 = k * x1;
+    
+                x2 = x1 + text_width/2;
+                y2 = y1 + text_height/2;
+    
+                return {
+                    x: x2 + lb['x'],
+                    y: y2 + lb['y'],
+                };
+            }
         }
     }
 
