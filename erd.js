@@ -84,14 +84,19 @@ function erd_move_entity_set(erd, entity_set, x, y)
 function erd_update_role(erd, relationship_set, role)
 {
     // end point
-    const anchors = erd_compute_role_endpoints(erd, relationship_set, role['entity_set']);
-    role['relationship_set_endpoint'] = anchors['relationship_set_endpoint'];
-    role['entity_set_endpoint'] = anchors['entity_set_endpoint'];
+    const endpoints = erd_compute_role_endpoints(erd, relationship_set, role['entity_set']);
+    role['relationship_set_endpoint'] = endpoints['relationship_set_endpoint'];
+    role['entity_set_endpoint'] = endpoints['entity_set_endpoint'];
 }
+
+function erd_compute_role_name_label_pos(erd, relationship_set, role)
+{
+
+}
+
 
 function erd_compute_role_endpoints(erd, relationship_set, entity_set)
 {
-    // compute anchor
     // entity set relative position to relationship set
     const x = entity_set['x'] - relationship_set['x'];
     const y = entity_set['y'] - relationship_set['y'];
@@ -157,14 +162,14 @@ function erd_compute_role_endpoints(erd, relationship_set, entity_set)
 
 function erd_relationship_set_add_role(erd, relationship_set, entity_set, role_name, role_multiplicity)
 {
-    const anchors = erd_compute_role_endpoints(erd, relationship_set, entity_set);
+    const endpoints = erd_compute_role_endpoints(erd, relationship_set, entity_set);
 
     relationship_set['roles'].push({
         entity_set,
         role_name,
         role_multiplicity,
-        relationship_set_endpoint: anchors['relationship_set_endpoint'],
-        entity_set_endpoint: anchors['entity_set_endpoint'],
+        relationship_set_endpoint: endpoints['relationship_set_endpoint'],
+        entity_set_endpoint: endpoints['entity_set_endpoint'],
     });
 }
 
