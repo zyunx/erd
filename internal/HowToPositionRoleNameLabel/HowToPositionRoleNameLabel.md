@@ -9,29 +9,28 @@
 ## Solution
 ![Solution](fig2.png "Solution")
 
-First, I postion label so that the bottom-center of it is at the center of the role connection line.
+First, I postion label so that the center of it(point C) is at the center of the role connection line.
 
-Then I move the label along the line which is perpendicular to the role connection line
+Then I translate the label along the line which is perpendicular to the role connection line
 until the label does not intersect the role connection.
 
-Finally, I draw the label whose bottom-center is at C.
+Finally, I draw the label whose right-bottom is at A.
 
-### How To Get The Point C?
+### How To Get The Translation Vector?
 
-Vector AC = Vector AB + Vector BC
+In the figure, the translation vector is AB.
+
+Vector AB = Vector AC + Vector CB
 
 Assume  
-Vector AB = (x1, y1),  
-Vector BC = (-w/2, 0), w is the width of label bounding box,  
-Vector AC = (x2, y2),  
-and the k is the slope of role connection line.
+Vector CB = (x1, y1), y1=k*x1, k is the slope of role connection line;  
+Vector AC = (-w/2, -h/2), w is the width of label bounding box, h is the height of the label bounding box;  
+Vector AB = (x2, y2);
 
 Then  
 x1 + (-w/2) = x2  
-y1 + 0 = y2  
+y1 + (-h/2) = y2  
 y1 = k * x1    
 x1 * x2 + y1 * y2 = 0
 
-The k and w is known, there 4 unkowns and 4 equations, so I can solve the equation group to get Vector AC(x2, y2).
-
-Finally, Point C = Point A + Vector AC
+The k and w is known, there 4 unkowns and 4 equations, so I can solve the equation group to get Vector AB(x2, y2).
