@@ -168,6 +168,16 @@ function erd_relationship_set_add_role(erd, relationship_set, entity_set, role_n
     });
 }
 
+function erd_elationship_set_remove_role(erd, relationship_set, role)
+{
+    let idx = relationship_set['roles'].indexOf(role);
+    if (idx != -1)
+    {
+        relationship_set['roles'].splice(idx, 1);
+    }
+}
+
+
 function get_relationship_set_by_name(erd, name)
 {
     for (const r of erd['relationship_sets'])

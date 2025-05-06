@@ -103,6 +103,13 @@ function erdp_create(erd, erdv)
         update();
     }
 
+    erdv['on_relationship_set_remove_role'] = function(relationship_set, role)
+    {
+        erd_elationship_set_remove_role(erd, relationship_set, role);
+
+        update();
+    }
+
     function draw_entity_set(x, y)
     {
         const e = erd_create_entity_set(erd, x, y);

@@ -19,6 +19,7 @@ function erdv_init() {
         /* for property box */
         on_props_changed: function(props) {},
         on_relationship_set_add_role(entity_set_name, role_name, role_multiplicity) {},
+        on_relationship_set_remove_role(relationship_set, role) { console.log("on_relationship_set_remove_role stub"); },
 
         /* methods */
         draw_entity_set,
@@ -302,12 +303,20 @@ function erdv_init() {
             </table>');
         for (const r of relationship_set['roles'])
         {
+            const remove_role_button = document.createElement('button', {
+                'type': 'button'
+            });
+            remove_role_button.innerText = '-';
+            remove_role_button.addEventListener('click', e => {
+                erdv['on_relationship_set_remove_role'](relationship_set, r);
+            });
+
             roles_table.appendChild(
                 _tr(
                     _td(_text(r['entity_set']['name'])),
                     _td(_text(r['role_name'])),
                     _td(_text(r['role_multiplicity'])),
-                    _td(_text(''))
+                    remove_role_button
                 )
             );
         }
