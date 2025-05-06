@@ -392,6 +392,12 @@ function erdv_init() {
         propertybox_container.style.visibility = 'hidden';
     }
 
+    window.addEventListener('beforeunload', e => {
+        if (!confirm("Are sure to leave this document?"))
+        {
+            e.preventDefault();
+        }
+    });
     
     var erd_canvas = document.getElementById('erd-canvas');
     erd_canvas.width = 800;
