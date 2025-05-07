@@ -4,20 +4,20 @@
         <link rel="stylesheet" href="styles.css" />
     </head>
     <body>
-        <div>A ERD tool</div>
-        <div>
-            <button id="entity-button" type="button">ENTITY</button>
-            <button id="relationship-button" type="button">RELATIONSHIP</button>
-        </div>
-        <div style="display: flex;">
-            <canvas id="erd-canvas">
-
-            </canvas>
-            <div id="propertybox-container">
-                
+        <div id="erd-app-container">
+            <header id="erd-header">A ERD TOOL - THE ENTITY-RELATIONSHIP MODEL: TOWARD A UNIFIED VIEW OF DATA</header>
+            <div id="erd-toolbar">
+                <button id="entity-button" type="button">ENTITY</button>
+                <button id="relationship-button" type="button">RELATIONSHIP</button>
+            </div>
+            <div id="erd-main">
+                <div id="erd-canvas-container">
+                    <canvas id="erd-canvas"></canvas>
+                </div>
+                <div id="propertybox-container">
+                </div>
             </div>
         </div>
-
     </body>
     <script src="erd.js" type="text/javascript"></script>
     <script src="erdv.js" type="text/javascript"></script>

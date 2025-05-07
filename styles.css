@@ -1,4 +1,50 @@
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background-color: lightgray;
+}
+
+#erd-app-container
+{
+    margin: 5px;
+}
+
+#erd-header {
+    height: 20px;
+}
+
+#erd-toolbar {
+    height: 30px;
+}
+
+#erd-main
+{
+    height: calc(100vh - 60px);
+    
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+#erd-canvas-container
+{
+    flex-grow: 10;
+    background-color: gray;
+    border: 1px solid black;
+}
+
+#propertybox-container
+{
+    flex-basis: auto;
+    width: 20em;
+}
+
 #erd-canvas
 {
-    border: 1px solid black;
+    background-color: white;
 }

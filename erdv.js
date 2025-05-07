@@ -332,9 +332,11 @@ function erdv_init() {
         const role_name = document.createElement('input', {
             'type': 'text'
         });
+        role_name.style.width = '8em';
         const role_multiplicity = document.createElement('input', {
             'type': 'text'
         });
+        role_multiplicity.style.width = '2em';
         const role_button = document.createElement('button', {
             'type': 'button'
         });
@@ -399,9 +401,10 @@ function erdv_init() {
         }
     });
     
+    var erd_canvas_container = document.getElementById('erd-canvas-container')
     var erd_canvas = document.getElementById('erd-canvas');
-    erd_canvas.width = 800;
-    erd_canvas.height = 800;
+    erd_canvas.width = erd_canvas_container.clientWidth - 10;
+    erd_canvas.height = erd_canvas_container.clientHeight - 10;
     const erd_canvas_ctx = erd_canvas.getContext("2d");
     erd_canvas_ctx.font = "20px serif";
     
