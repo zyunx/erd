@@ -21,10 +21,21 @@ function erd_create()
     };
 }
 
+/*
+ * To support saving and loading.
+ * External storage can't store reference in memory.
+ * So we need id or key to identify objects.
+ */
+function erd_generate_id()
+{
+    return crypto.randomUUID();
+}
+
 function erd_create_entity_set(erd, x = 0, y = 0)
 {
     // (x, y) is the center of the rectangle
     const e = {
+        id: erd_generate_id(),
         "x": x,
         "y": y,
         "width": erd['entity_set.width'],
@@ -41,6 +52,7 @@ function erd_create_relationship_set(erd, x, y)
 {
     // (x, y) is the center of the diamond
     const r = {
+        id: erd_generate_id(),
         x,
         y,
         "width": erd['relationship_set.width'],
@@ -73,7 +85,7 @@ function erd_move_entity_set(erd, entity_set, x, y)
     {
         for (const role of rel['roles'])
         {
-            if (role['entity_set'] === entity_set)
+            if (role['entity_set_id'] === entity_set['id'])
             {
                 erd_update_role(erd, rel, role);
             }
@@ -84,7 +96,8 @@ function erd_move_entity_set(erd, entity_set, x, y)
 function erd_update_role(erd, relationship_set, role)
 {
     // end point
-    const endpoints = erd_compute_role_endpoints(erd, relationship_set, role['entity_set']);
+    const endpoints = erd_compute_role_endpoints(erd, relationship_set, 
+        erd_get_entity_set_by_id(erd, role['entity_set_id']));
     role['relationship_set_endpoint'] = endpoints['relationship_set_endpoint'];
     role['entity_set_endpoint'] = endpoints['entity_set_endpoint'];
 }
@@ -160,7 +173,8 @@ function erd_relationship_set_add_role(erd, relationship_set, entity_set, role_n
     const endpoints = erd_compute_role_endpoints(erd, relationship_set, entity_set);
 
     relationship_set['roles'].push({
-        entity_set,
+        id: erd_generate_id(),
+        entity_set_id: entity_set['id'],
         role_name,
         role_multiplicity,
         relationship_set_endpoint: endpoints['relationship_set_endpoint'],
@@ -190,7 +204,31 @@ function get_relationship_set_by_name(erd, name)
     return null;
 }
 
-function get_entity_set_by_name(erd, name)
+function erd_get_relationship_set_by_id(erd, id)
+{
+    for (const r of erd['relationship_sets'])
+    {
+        if (r['id'] == id)
+        {
+            return r;
+        }
+    }
+    return null;
+}
+
+function erd_get_relationship_set_role_by_id(erd, relationship_set, role_id)
+{
+    for (const r of relationship_set['roles'])
+    {
+        if (r['id'] == role_id)
+        {
+            return r;
+        }
+    }
+    return null;
+}
+
+function erd_get_entity_set_by_name(erd, name)
 {
     for (const e of erd['entity_sets'])
         {
@@ -200,6 +238,16 @@ function get_entity_set_by_name(erd, name)
             }
         }
         return null;
+}
+
+function erd_get_entity_set_by_id(erd, id)
+{
+    for (const e of erd['entity_sets']) {
+        if (e['id'] == id) {
+            return e;
+        }
+    }
+    return null;
 }
 
 function get_object_by_coordinate(erd, x, y)

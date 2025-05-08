@@ -14,6 +14,9 @@ function erdp_create(erd, erdv)
     const TO_DRAW_ENTITY_SET = "ENTITY_SET";
     const TO_DRAW_RELATIONSHIP_SET = "RELATIONSHIP_SET";
 
+    /* file handle for the underlying file of ERD */
+    var file_handle = null;
+
     erdv['on_canvas_mouse_down'] = function(x, y)
     {
         console.log("erdp: on_canvas_mouse_down");
@@ -96,16 +99,39 @@ function erdp_create(erd, erdv)
     {
         console.log('on_relationship_set_add_role', entity_set_name, role_name, role_multiplicity);
         const relationship_set = get_relationship_set_by_name(erd, object_selected['name']);
-        const entity_set = get_entity_set_by_name(erd, entity_set_name);
+        const entity_set = erd_get_entity_set_by_name(erd, entity_set_name);
         
         erd_relationship_set_add_role(erd, relationship_set, entity_set, role_name, role_multiplicity);
 
         update();
     }
 
-    erdv['on_relationship_set_remove_role'] = function(relationship_set, role)
+    erdv['on_relationship_set_remove_role'] = function(relationship_set_view, role_view)
     {
+        const relationship_set = erd_get_relationship_set_by_id(erd, relationship_set_view['id']);
+        const role = erd_get_relationship_set_role_by_id(erd, relationship_set, role_view['id']);
+
         erd_elationship_set_remove_role(erd, relationship_set, role);
+
+        update();
+    }
+
+    erdv['on_save'] = async function () {
+        if (file_handle == null)
+        {
+            file_handle = await erdv['get_save_file_handle']();
+        }
+        const writableStream = await file_handle.createWritable();
+        await writableStream.write(JSON.stringify(erd));
+        await writableStream.close();
+    };
+        
+    erdv['on_load'] = async function (file) {
+        file_handle = file;
+
+        object_selected = null;
+
+        erd = JSON.parse(await (await file_handle.getFile()).text());
 
         update();
     }
@@ -163,9 +189,32 @@ function erdp_create(erd, erdv)
         }
         else if (obj['type'] == 'relationship_set')
         {
-            erdv['show_relationship_set_properties'](obj, erd['entity_sets']);
+            erdv['show_relationship_set_properties'](
+                to_relationship_set_view(obj),
+                erd['entity_sets']);
         }
     }
+
+    /*
+     * Decouple model and view
+     */
+    function to_relationship_set_role_view(role)
+    {
+        const entity_set = erd_get_entity_set_by_id(erd, role['entity_set_id']);
+        return {
+            ...role,
+            entity_set_name: entity_set['name'],
+        };
+    }
+
+    function to_relationship_set_view(relationship_set)
+    {
+        return {
+            ...relationship_set,
+            roles: relationship_set['roles'].map(role => to_relationship_set_role_view(role)),
+        };
+    }
+
 
     function hide_object_props()
     {

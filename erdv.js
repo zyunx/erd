@@ -20,6 +20,7 @@ function erdv_init() {
         on_props_changed: function(props) {},
         on_relationship_set_add_role(entity_set_name, role_name, role_multiplicity) {},
         on_relationship_set_remove_role(relationship_set, role) { console.log("on_relationship_set_remove_role stub"); },
+        async on_save() { console.log('on_save'); },
 
         /* methods */
         draw_entity_set,
@@ -28,6 +29,7 @@ function erdv_init() {
         show_entity_set_properties,
         show_relationship_set_properties,
         hide_props,
+        get_save_file_handle,
     };
 
     function clear()
@@ -238,7 +240,7 @@ function erdv_init() {
 
     function show_relationship_set_properties(relationship_set, entity_sets)
     {
-        _show_props(create_relationship_set_propertybox(relationship_set, entity_sets));
+        _show_props(_create_relationship_set_propertybox(relationship_set, entity_sets));
     }
 
 
@@ -266,7 +268,7 @@ function erdv_init() {
         return box;
     }
 
-    function create_relationship_set_propertybox(relationship_set, entity_sets)
+    function _create_relationship_set_propertybox(relationship_set, entity_sets)
     {
         const box = document.createElement('div');
 
@@ -313,7 +315,7 @@ function erdv_init() {
 
             roles_table.appendChild(
                 _tr(
-                    _td(_text(r['entity_set']['name'])),
+                    _td(_text(r['entity_set_name'])),
                     _td(_text(r['role_name'])),
                     _td(_text(r['role_multiplicity'])),
                     remove_role_button
@@ -394,11 +396,29 @@ function erdv_init() {
         propertybox_container.style.visibility = 'hidden';
     }
 
+    async function get_save_file_handle()
+    {
+        // Supported by Chrome and Edge for now on 20250508.
+        return await window.showSaveFilePicker();
+    }
+
     window.addEventListener('beforeunload', e => {
         if (!confirm("Are sure to leave this document?"))
         {
             e.preventDefault();
         }
+    });
+
+    var erd_save_button = document.getElementById('save-button');
+    erd_save_button.addEventListener('click', async e => {
+        await erdv['on_save']();
+    });
+
+    var erd_load_button = document.getElementById('load-button');
+    erd_load_button.addEventListener('click', async e => {
+        // Supported by Chrome and Edge for now on 20250508.
+        const [file_handle] = await window.showOpenFilePicker();
+        await erdv['on_load'](file_handle);
     });
     
     var erd_canvas_container = document.getElementById('erd-canvas-container')
