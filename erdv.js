@@ -57,7 +57,7 @@ function erdv_init() {
 
     function draw_relationship_set(r)
     {
-        console.log('erdv: draw_relationship', r);
+        //console.log('erdv: draw_relationship', r);
 
         const p1 = {
             x: r['x'] - r['width']/2,
@@ -104,37 +104,47 @@ function erdv_init() {
             erd_canvas_ctx.lineTo(x2, y2);
             erd_canvas_ctx.stroke();
 
-            _draw_role_label(role);
+            _draw_role_name_label(role);
+            _draw_role_multiplicity_label(role);
         }
     }
 
-    function _draw_role_label(role)
+    function _draw_role_name_label(role)
     {
         const role_name = role['role_name'];
         if (role_name)
         {
             const text_g = erd_canvas_ctx.measureText(role_name);
-            const label_pos = _role_name_label_bottom_center(role, text_g.width + 10, _text_height(text_g)+10);
+            const padding = 10;
+            const label_pos = _role_name_label_left_bottom(role, 
+                text_g.width + padding, _text_height(text_g) + padding);
 
-            console.log('_draw_role_label', label_pos);
+            //console.log('_draw_role_name_label', label_pos);
             erd_canvas_ctx.fillText(role_name, 
-                label_pos['x'] + 5, label_pos['y']-5);
-            
+                label_pos['x'] + padding/2, label_pos['y'] - padding/2);
         }
     }
 
-    //fucntion _offset_role_name_label(role, )
-    function _role_name_label_bottom_center(role, text_width, text_height)
+    function _draw_role_multiplicity_label(role)
+    {
+        const role_multiplicity = role['role_multiplicity'];
+        if (role_multiplicity)
+        {
+            const text_g = erd_canvas_ctx.measureText(role_multiplicity);
+            const padding = 10;
+            const label_pos = _role_multiplicity_label_left_bottom(role, 
+                text_g.width + padding, _text_height(text_g) + padding);
+
+            erd_canvas_ctx.fillText(role_multiplicity, 
+                label_pos['x'] + padding/2, label_pos['y'] - padding/2);
+        }
+    }
+
+    function _role_label_offset(role, label_width, label_height)
     {
         /*
         * see internal/HowToPositionRoleNameLabel
         */
-
-        const lb = {
-            x: (role['entity_set_endpoint']['x'] + role['relationship_set_endpoint']['x'])/2 - text_width/2,
-            y: (role['entity_set_endpoint']['y'] + role['relationship_set_endpoint']['y'])/2 + text_height/2,
-        };
-
         const xr = role['entity_set_endpoint']['x'] - role['relationship_set_endpoint']['x'];
         const yr = role['entity_set_endpoint']['y'] - role['relationship_set_endpoint']['y'];
 
@@ -145,18 +155,18 @@ function erdv_init() {
         {
             if (yr >= 0)
             {
-                x2 = text_width/2;
+                x2 = label_width/2;
                 y2 = 0;
             }
             else
             {
-                x2 = -text_width/2;
+                x2 = -label_width/2;
                 y2 = 0;
             }
             
             return {
-                x: x2 + lb['x'],
-                y: y2 + lb['y'],
+                x: x2,
+                y: y2,
             };
         }
         else if (xr >= 0)
@@ -165,28 +175,28 @@ function erdv_init() {
 
             if (yr < 0)
             {
-                x1 = (text_width + k * text_height) / (2 * (k*k + 1));
+                x1 = (label_width + k * label_height) / (2 * (k*k + 1));
                 y1 = k * x1;
     
-                x2 = x1 - text_width/2;
-                y2 = y1 - text_height/2;
+                x2 = x1 - label_width/2;
+                y2 = y1 - label_height/2;
     
                 return {
-                    x: x2 + lb['x'],
-                    y: y2 + lb['y'],
+                    x: x2,
+                    y: y2,
                 };
             }
             else 
             {
-                x1 = (-text_width + k * text_height) / (2 * (k*k + 1));
+                x1 = (-label_width + k * label_height) / (2 * (k*k + 1));
                 y1 = k * x1;
     
-                x2 = x1 + text_width/2;
-                y2 = y1 - text_height/2;
+                x2 = x1 + label_width/2;
+                y2 = y1 - label_height/2;
     
                 return {
-                    x: x2 + lb['x'],
-                    y: y2 + lb['y'],
+                    x: x2,
+                    y: y2,
                 };
             }
         }
@@ -196,31 +206,63 @@ function erdv_init() {
 
             if (yr < 0)
             {
-                x1 = (text_width - k * text_height) / (2 * (k*k + 1));
+                x1 = (label_width - k * label_height) / (2 * (k*k + 1));
                 y1 = k * x1;
     
-                x2 = x1 - text_width/2;
-                y2 = y1 + text_height/2;
+                x2 = x1 - label_width/2;
+                y2 = y1 + label_height/2;
     
                 return {
-                    x: x2 + lb['x'],
-                    y: y2 + lb['y'],
+                    x: x2,
+                    y: y2,
                 };
             }
             else 
             {
-                x1 = (-text_width - k * text_height) / (2 * (k*k + 1));
+                x1 = (-label_width - k * label_height) / (2 * (k*k + 1));
                 y1 = k * x1;
     
-                x2 = x1 + text_width/2;
-                y2 = y1 + text_height/2;
+                x2 = x1 + label_width/2;
+                y2 = y1 + label_height/2;
     
                 return {
-                    x: x2 + lb['x'],
-                    y: y2 + lb['y'],
+                    x: x2,
+                    y: y2,
                 };
             }
         }
+    }
+
+    function _role_name_label_left_bottom(role, text_width, text_height)
+    {
+        const lb = {
+            x: (role['entity_set_endpoint']['x'] + role['relationship_set_endpoint']['x'])/2 - text_width/2,
+            y: (role['entity_set_endpoint']['y'] + role['relationship_set_endpoint']['y'])/2 + text_height/2,
+        };
+
+        const center = _role_label_offset(role, text_width, text_height);
+
+        return {
+            x: lb['x'] + center['x'],
+            y: lb['y'] + center['y'],
+        };
+    }
+
+    function _role_multiplicity_label_left_bottom(role, text_width, text_height)
+    {
+        const lb = {
+            x: (role['entity_set_endpoint']['x'] + role['relationship_set_endpoint']['x'])/2 - text_width/2,
+            y: (role['entity_set_endpoint']['y'] + role['relationship_set_endpoint']['y'])/2 + text_height/2,
+        };
+
+        const center = _role_label_offset(role, text_width, text_height);
+
+        /* role multiplicity label is symmetric to role name label
+         * about axis of role connection line. */ 
+        return {
+            x: lb['x'] - center['x'],
+            y: lb['y'] - center['y'],
+        };
     }
 
     function _show_props(property_box)
