@@ -71,39 +71,236 @@ function erd_move_relationship_set(erd, relationship_set, x, y)
 {
     relationship_set['x'] = x;
     relationship_set['y'] = y;
-    for (const role of relationship_set['roles'])
-    {
-        erd_update_role(erd, relationship_set, role);
-    }
+    
+    erd_layout_role_connection_lines(erd);
 }
 
 function erd_move_entity_set(erd, entity_set, x, y)
 {
     entity_set['x'] = x;
     entity_set['y'] = y;
-    for (const rel of erd['relationship_sets'])
+
+    erd_layout_role_connection_lines(erd);
+}
+
+function erd_layout_role_connection_lines(erd)
+{
+    /* trade off code readability with performance 
+    /*
+     * 1. update relationship set and entity set anchors
+     *    for role connection lines
+     * 2. separate coincided connection lines
+     * 3. update coordinates of role connection line endpoints
+     */
+    _erd_update_all_role_anchors(erd);
+
+    _erd_separate_all_coincided_role_connection_lines(erd);
+
+    _erd_update_all_role_connection_line_endpoints(erd);
+
+}
+
+function _erd_update_all_role_anchors(erd)
+{
+    for (const relationship_set of erd['relationship_sets'])
     {
-        for (const role of rel['roles'])
+        for (const role of relationship_set['roles'])
         {
-            if (role['entity_set_id'] === entity_set['id'])
-            {
-                erd_update_role(erd, rel, role);
-            }
+            const entity_set = erd_get_entity_set_by_id(erd, role['entity_set_id']);
+            const anchors = _compute_role_anchors(relationship_set, entity_set);
+
+            _set_role_anchors(role, anchors);
         }
     }
 }
 
-function erd_update_role(erd, relationship_set, role)
+function _erd_separate_all_coincided_role_connection_lines(erd)
 {
-    // end point
-    const endpoints = erd_compute_role_endpoints(erd, relationship_set, 
-        erd_get_entity_set_by_id(erd, role['entity_set_id']));
+    for (const relationship_set of erd['relationship_sets'])
+    {
+        for (const role of relationship_set['roles'])
+        {
+            const coincided_roles = [role]
+            for (const r of relationship_set['roles'])
+            {
+                if (role['id'] != r['id'] && _is_role_coincided(role, r))
+                {
+                    coincided_roles.push(r);
+                }
+            }
+            
+            if (coincided_roles.length == 2)
+            {
+                const entity_set = erd_get_entity_set_by_id(erd, coincided_roles[0]['entity_set_id']);
+
+                const new_anchors = _compute_separated_anchors_of_two_coincided_role_connections(
+                    relationship_set, entity_set, coincided_roles[0], coincided_roles[1]
+                );
+
+                _set_role_anchors(coincided_roles[0], new_anchors[0]);
+                _set_role_anchors(coincided_roles[1], new_anchors[1]);
+            }
+        }
+    } 
+}
+
+function _erd_update_all_role_connection_line_endpoints(erd)
+{
+    for (const relationship_set of erd['relationship_sets'])
+    {
+        for (const role of relationship_set['roles'])
+        {
+            const entity_set = erd_get_entity_set_by_id(erd, role['entity_set_id']);
+
+            const endpoints = _compute_role_endpoints_from_anchors(relationship_set, entity_set, role);
+
+            _set_role_endpoints(role, endpoints);
+        }
+    }
+}
+
+function _set_role_endpoints(role, endpoints)
+{
     role['relationship_set_endpoint'] = endpoints['relationship_set_endpoint'];
     role['entity_set_endpoint'] = endpoints['entity_set_endpoint'];
 }
 
 
-function erd_compute_role_endpoints(erd, relationship_set, entity_set)
+function _compute_separated_anchors_of_two_coincided_role_connections(relationship_set, entity_set, one_of_roles)
+{
+    let new_ra_0 = {...one_of_roles['relationship_set_anchor']}
+    let new_ea_0 = {...one_of_roles['entity_set_anchor']}
+
+    let new_ra_1 = {...one_of_roles['relationship_set_anchor']}
+    let new_ea_1 = {...one_of_roles['entity_set_anchor']}
+
+
+    const anchor_x_ratio = entity_set['width']/relationship_set['width']/2;
+    const anchor_y_ratio = entity_set['height']/relationship_set['height']/2;
+
+    if (one_of_roles['entity_set_anchor']['x'] == 1 && one_of_roles['entity_set_anchor']['y'] == 0)
+    {
+        // east
+        new_ea_0 = {
+            x: 1, y: -0.5,
+        }
+        new_ea_1 = {
+            x: 1, y: 0.5,
+        }
+        
+        new_ra_0 = {
+            x: -(1-anchor_y_ratio), y: -anchor_y_ratio
+        }
+        new_ra_1 = {
+            x: -(1-anchor_y_ratio), y: anchor_y_ratio
+        }
+    }
+    else if (one_of_roles['entity_set_anchor']['x'] == 0 && one_of_roles['entity_set_anchor']['y'] == 1)
+    {
+        // south
+        new_ea_0 = {
+            x: -0.5, y: 1,
+        }
+        new_ea_1 = {
+            x: 0.5, y: 1,
+        }
+        
+        new_ra_0 = {
+            x: -anchor_x_ratio, y: -(1-anchor_x_ratio)
+        }
+        new_ra_1 = {
+            x: anchor_x_ratio, y: -(1-anchor_x_ratio)
+        }
+    }
+    else if (one_of_roles['entity_set_anchor']['x'] == -1 && one_of_roles['entity_set_anchor']['y'] == 0)
+    {
+        // west
+        new_ea_0 = {
+            x: -1, y: -0.5,
+        }
+        new_ea_1 = {
+            x: -1, y: 0.5,
+        }
+        
+        new_ra_0 = {
+            x: (1-anchor_y_ratio), y: -anchor_y_ratio
+        }
+        new_ra_1 = {
+            x: (1-anchor_y_ratio), y: anchor_y_ratio
+        }
+    }
+    else if (one_of_roles['entity_set_anchor']['x'] == 0 && one_of_roles['entity_set_anchor']['y'] == -1)
+    {
+        // north
+        new_ea_0 = {
+            x: -0.5, y: -1,
+        }
+        new_ea_1 = {
+            x: 0.5, y: -1,
+        }
+        
+        new_ra_0 = {
+            x: -anchor_x_ratio, y: 1-anchor_x_ratio
+        }
+        new_ra_1 = {
+            x: anchor_x_ratio, y: 1-anchor_x_ratio
+        }
+    }
+
+    return [
+        {
+            relationship_set_anchor: new_ra_0,
+            entity_set_anchor: new_ea_0
+        },
+        {
+            relationship_set_anchor: new_ra_1,
+            entity_set_anchor: new_ea_1
+        }
+    ]
+}
+
+function _is_role_coincided(a, b)
+{
+    return (a['relationship_set_anchor']['x'] == b['relationship_set_anchor']['x']
+        && a['relationship_set_anchor']['y'] == b['relationship_set_anchor']['y']
+        && a['entity_set_anchor']['x'] == b['entity_set_anchor']['x']
+        && a['entity_set_anchor']['y'] == b['entity_set_anchor']['y']);
+}
+
+
+function _set_role_anchors(role, anchors)
+{
+    role['relationship_set_anchor'] = anchors['relationship_set_anchor'];
+    role['entity_set_anchor'] = anchors['entity_set_anchor'];
+}
+
+
+function _compute_role_endpoints_from_anchors(relationship_set, entity_set, anchors)
+{
+    const ra = anchors['relationship_set_anchor']
+    const ea = anchors['entity_set_anchor']
+
+    const r = relationship_set;
+    const e = entity_set;
+
+    const x1 = ra['x'] * r['width']/2 + r['x'];
+    const y1 = ra['y'] * r['height']/2 + r['y'];
+    const x2 = ea['x'] * e['width']/2 + e['x'];
+    const y2 = ea['y'] * e['height']/2 + e['y'];
+
+    return {
+        relationship_set_endpoint: {
+            x: x1,
+            y: y1,
+        },
+        entity_set_endpoint: {
+            x: x2,
+            y: y2,
+        },
+    };
+}
+
+function _compute_role_anchors(relationship_set, entity_set)
 {
     // entity set relative position to relationship set
     const x = entity_set['x'] - relationship_set['x'];
@@ -230,37 +427,30 @@ function erd_compute_role_endpoints(erd, relationship_set, entity_set)
         ea = relative_position['ea']
     }
     
-
-    const r = relationship_set;
-    const x1 = ra[0] * r['width']/2 + r['x'];
-    const y1 = ra[1] * r['height']/2 + r['y'];
-    const x2 = ea[0] * entity_set['width']/2 + entity_set['x'];
-    const y2 = ea[1] * entity_set['height']/2 + entity_set['y'];
-
     return {
-        relationship_set_endpoint: {
-            x: x1,
-            y: y1,
+        relationship_set_anchor: {
+            x: ra[0],
+            y: ra[1],
         },
-        entity_set_endpoint: {
-            x: x2,
-            y: y2,
+        entity_set_anchor: {
+            x: ea[0],
+            y: ea[1],
         },
     };
 }
 
 function erd_relationship_set_add_role(erd, relationship_set, entity_set, role_name, role_multiplicity)
 {
-    const endpoints = erd_compute_role_endpoints(erd, relationship_set, entity_set);
-
-    relationship_set['roles'].push({
+    const role = {
         id: erd_generate_id(),
         entity_set_id: entity_set['id'],
         role_name,
-        role_multiplicity,
-        relationship_set_endpoint: endpoints['relationship_set_endpoint'],
-        entity_set_endpoint: endpoints['entity_set_endpoint'],
-    });
+        role_multiplicity
+    };
+
+    relationship_set['roles'].push(role);
+
+    erd_layout_role_connection_lines(erd);
 }
 
 function erd_elationship_set_remove_role(erd, relationship_set, role)
@@ -270,6 +460,8 @@ function erd_elationship_set_remove_role(erd, relationship_set, role)
     {
         relationship_set['roles'].splice(idx, 1);
     }
+
+    erd_layout_role_connection_lines(erd);
 }
 
 
