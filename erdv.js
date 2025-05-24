@@ -468,7 +468,7 @@ function erdv_init() {
     erd_canvas.width = erd_canvas_container.clientWidth - 10;
     erd_canvas.height = erd_canvas_container.clientHeight - 10;
     const erd_canvas_ctx = erd_canvas.getContext("2d");
-    erd_canvas_ctx.font = "20px serif";
+    erd_canvas_ctx.font = "16px serif";
     
 
     erd_canvas.addEventListener("click", ev => {

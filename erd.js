@@ -126,29 +126,110 @@ function erd_compute_role_endpoints(erd, relationship_set, entity_set)
             ea = [0, 1]
         }
     } 
-    else if (Math.abs(y/x) > 1) {
-        if (y > 0)
+    else
+    {
+        /* anchor cases of relationship set and entity set relative position */
+        const ANCHOR_CASES = {
+            'EAST': {
+                ra: [1,  0],
+                ea: [-1, 0]
+            },
+            'EAST_NORTH': {
+                ra: [1,  0],
+                ea: [-1, -1]
+            },
+            'NORTH_EAST': {
+                ra: [0,  1],
+                ea: [-1, -1]
+            },
+            'NORTH': {
+                ra: [0,  1],
+                ea: [0, -1]
+            },
+            'NORTH_WEST': {
+                ra: [0,  1],
+                ea: [1, -1]
+            },
+            'WEST_NORTH': {
+                ra: [-1, 0],
+                ea: [1, -1]
+            },
+            'WEST': {
+                ra: [-1, -0],
+                ea: [1, 0]
+            },
+            'WEST_SOUTH': {
+                ra: [-1, 0],
+                ea: [1, 1]
+            },
+            'SOUTH_WEST': {
+                ra: [0, -1],
+                ea: [1, 1]
+            },
+            'SOUTH': {
+                ra: [0, -1],
+                ea: [0, 1]
+            },
+            'SOUTH_EAST': {
+                ra: [0, -1],
+                ea: [-1, 1]
+            },
+            'EAST_SOUTH': {
+                ra: [1, 0],
+                ea: [-1, 1]
+            }
+        }
+
+        let relative_position = null;
+        const k = y/x;
+        const K_KEY_VALUES = [
+            Math.tan(-Math.PI*5/12),
+            Math.tan(-Math.PI*1/4),
+            Math.tan(-Math.PI*1/12),
+            Math.tan(Math.PI*1/12),
+            Math.tan(Math.PI*1/4),
+            Math.tan(Math.PI*5/12),
+        ]
+        if (k <= K_KEY_VALUES[0])
         {
-            ra = [0, 1]
-            ea = [0, -1]
+            relative_position = x > 0 ? 
+                ANCHOR_CASES['SOUTH'] : ANCHOR_CASES['NORTH']
+        }
+        else if (k > K_KEY_VALUES[0] && k <= K_KEY_VALUES[1])
+        {
+            relative_position = x > 0 ?
+                ANCHOR_CASES['SOUTH_EAST'] : ANCHOR_CASES['NORTH_WEST']
+        }
+        else if (k > K_KEY_VALUES[1] && k <= K_KEY_VALUES[2])
+        {
+            relative_position = x > 0 ?
+                ANCHOR_CASES['EAST_SOUTH'] : ANCHOR_CASES['WEST_NORTH']
+        }
+        else if (k > K_KEY_VALUES[2] && k <= K_KEY_VALUES[3])
+        {
+            relative_position = x > 0 ?
+                ANCHOR_CASES['EAST'] : ANCHOR_CASES['WEST']
+        }
+        else if (k > K_KEY_VALUES[3] && k <= K_KEY_VALUES[4])
+        {
+            relative_position = x > 0 ?
+                ANCHOR_CASES['EAST_NORTH'] : ANCHOR_CASES['WEST_SOUTH']
+        }
+        else if (k > K_KEY_VALUES[4] && k <= K_KEY_VALUES[5])
+        {
+            relative_position = x > 0 ?
+                ANCHOR_CASES['NORTH_EAST'] : ANCHOR_CASES['SOUTH_WEST']
         }
         else
         {
-            ra = [0, -1]
-            ea = [0, 1]
+            relative_position = x > 0 ?
+                ANCHOR_CASES['NORTH'] : ANCHOR_CASES['SOUTH']
         }
-    } else {
-        if (x > 0)
-        {
-            ra = [1, 0]
-            ea = [-1, 0]
-        }
-        else
-        {
-            ra = [-1, 0]
-            ea = [1, 0]
-        }
+
+        ra = relative_position['ra']
+        ea = relative_position['ea']
     }
+    
 
     const r = relationship_set;
     const x1 = ra[0] * r['width']/2 + r['x'];
