@@ -261,7 +261,8 @@ function _compute_separated_anchors_of_two_coincided_role_connections(relationsh
 
 function _is_role_coincided(a, b)
 {
-    return (a['relationship_set_anchor']['x'] == b['relationship_set_anchor']['x']
+    return (a['entity_set_id'] == b['entity_set_id']
+        && a['relationship_set_anchor']['x'] == b['relationship_set_anchor']['x']
         && a['relationship_set_anchor']['y'] == b['relationship_set_anchor']['y']
         && a['entity_set_anchor']['x'] == b['entity_set_anchor']['x']
         && a['entity_set_anchor']['y'] == b['entity_set_anchor']['y']);
