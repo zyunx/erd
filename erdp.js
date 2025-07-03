@@ -27,7 +27,8 @@ function erdp_create(erd, erdv)
             if (obj == null)
             {
                 object_selected = null;
-                hide_object_props();
+                show_erd_props();
+                //hide_object_props();
             }
             else
             {
@@ -133,6 +134,26 @@ function erdp_create(erd, erdv)
 
         erd = JSON.parse(await (await file_handle.getFile()).text());
 
+        erd_layout_role_connection_lines(erd)
+
+        console.log('onload: ', erd);
+
+        erdv['change_canvas_size']({
+            'width': erd['width'],
+            'height': erd['height']
+        });
+
+        update();
+    }
+
+    erdv['on_settings_change'] = function (settings){
+        erd_change_settings(erd, settings);
+
+        erdv['change_canvas_size']({
+            'width': erd['width'],
+            'height': erd['height']
+        });
+
         update();
     }
 
@@ -219,6 +240,11 @@ function erdp_create(erd, erdv)
     function hide_object_props()
     {
         erdv['hide_props']();
+    }
+
+    function show_erd_props()
+    {
+        erdv['show_erd_props'](erd);
     }
 
     function update_canvas()

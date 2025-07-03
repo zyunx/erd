@@ -2,20 +2,24 @@
  * ERD model
  */
 
-const erd_config = {
-    'entity_set.width': 100,
+const erd_settings_default = {
+    "width": 1080,
+    "height": 720,
+    'entity_set.width' : 100,
     'entity_set.height': 50,
+    'relationship_set.width': 140,
+    'relationship_set.height': 70,
 };
 
 function erd_create()
 {
     return {
-        "width": 1000,
-        "height": 1000,
-        'entity_set.width' : erd_config['entity_set.width'],
-        'entity_set.height': erd_config['entity_set.height'],
-        'relationship_set.width': 140,
-        'relationship_set.height': 70,
+        "width": erd_settings_default['width'],
+        "height": erd_settings_default['height'],
+        'entity_set.width' : erd_settings_default['entity_set.width'],
+        'entity_set.height': erd_settings_default['entity_set.height'],
+        'relationship_set.width': erd_settings_default['relationship_set.width'],
+        'relationship_set.height': erd_settings_default['relationship_set.height'],
         "entity_sets": [],
         "relationship_sets": [],
     };
@@ -574,4 +578,27 @@ function get_object_by_coordinate(erd, x, y)
     }
 
     return null;
+}
+
+function erd_change_settings(erd, settings) {
+    erd['width'] = settings['width'];
+    erd['height'] = settings['height'];
+    erd['entity_set.width'] = settings['entity_set.width'];
+    erd['entity_set.height'] = settings['entity_set.height'];
+    erd['relationship_set.width'] = settings['relationship_set.width'];
+    erd['relationship_set.height'] = settings['relationship_set.height'];
+    
+    for (const e of erd['entity_sets'])
+    {
+        e['width'] = erd['entity_set.width'];
+        e['height'] = erd['entity_set.height'];
+    }
+
+    for (const r of erd['relationship_sets'])
+    {
+        r['width'] = erd['relationship_set.width'];
+        r['height'] = erd['relationship_set.height'];
+    }
+
+    erd_layout_role_connection_lines(erd);
 }

@@ -3,7 +3,7 @@
  * ERD view
  */
 
-function erdv_init() {
+function erdv_init(erd) {
     
     const erdv = {
         /* events */
@@ -22,19 +22,30 @@ function erdv_init() {
         on_relationship_set_remove_role(relationship_set, role) { console.log("on_relationship_set_remove_role stub"); },
         async on_save() { console.log('on_save'); },
 
+        on_settings_change: function(settings) { console.log('on_settings_change ', settings); },
+
         /* methods */
         draw_entity_set,
         draw_relationship_set,
         clear,
+        change_canvas_size,
         show_entity_set_properties,
         show_relationship_set_properties,
         hide_props,
+        show_erd_props,
         get_save_file_handle,
     };
 
     function clear()
     {
         erd_canvas_ctx.clearRect(0, 0, erd_canvas.width, erd_canvas.height);
+    }
+
+    function change_canvas_size(size){
+        erd_canvas.width = size['width']
+        erd_canvas.height = size['height']
+        erd_canvas_ctx = erd_canvas.getContext("2d");
+        erd_canvas_ctx.font = "16px serif";
     }
 
     function draw_entity_set(e)
@@ -285,6 +296,80 @@ function erdv_init() {
         _show_props(_create_relationship_set_propertybox(relationship_set, entity_sets));
     }
 
+    function show_erd_props(erd)
+    {
+        _show_props(_create_erd_propertybox(erd));
+    }
+
+    function _create_erd_propertybox(erd)
+    {
+        const box = document.createElement('div');
+
+        const props_tab = document.createElement('table');
+
+        props_tab.appendChild(_html('<tr><th colspan="2">Entity Set<th></tr>'));
+        const entity_set_width_input = document.createElement('input');
+        entity_set_width_input.value = erd['entity_set.width'];
+        props_tab.appendChild(_tr(
+            _td(_text('Width: ')),
+            _td(entity_set_width_input)
+        ));
+
+        const entity_set_height_input = document.createElement('input');
+        entity_set_height_input.value = erd['entity_set.height'];
+        props_tab.appendChild(_tr(
+            _td(_text('Height: ')),
+            _td(entity_set_height_input)
+        ));
+
+        props_tab.appendChild(_html('<tr><th colspan="2">Relationship Set<th></tr>'));
+        const relationship_set_width_input = document.createElement('input');
+        relationship_set_width_input.value = erd['relationship_set.width'];
+        props_tab.appendChild(_tr(
+            _td(_text('Width: ')),
+            _td(relationship_set_width_input)
+        ));
+
+        const relationship_set_height_input = document.createElement('input');
+        relationship_set_height_input.value = erd['relationship_set.height'];
+        props_tab.appendChild(_tr(
+            _td(_text('Height: ')),
+            _td(relationship_set_height_input)
+        ));
+
+        props_tab.appendChild(_html('<tr><th colspan="2">Canvas<th></tr>'));
+        const canvas_width_input = document.createElement('input');
+        canvas_width_input.value = erd['width'];
+        props_tab.appendChild(_tr(
+            _td(_text('Width: ')),
+            _td(canvas_width_input)
+        ));
+
+        const canvas_height_input = document.createElement('input');
+        canvas_height_input.value = erd['height'];
+        props_tab.appendChild(_tr(
+            _td(_text('Height: ')),
+            _td(canvas_height_input)
+        ));
+
+
+        const button_change_settings = document.createElement('button');
+        button_change_settings.innerText = 'Change';
+        button_change_settings.addEventListener('click', evt => {
+            erdv['on_settings_change']({
+                "width": canvas_width_input.value,
+                "height": canvas_height_input.value,
+                'entity_set.width' : entity_set_width_input.value,
+                'entity_set.height': entity_set_height_input.value,
+                'relationship_set.width': relationship_set_width_input.value,
+                'relationship_set.height': relationship_set_height_input.value,
+            });
+        });
+
+        box.appendChild(props_tab);
+        box.appendChild(button_change_settings);
+        return box;
+    }
 
     function create_entity_set_propertybox(e)
     {
@@ -360,7 +445,7 @@ function erdv_init() {
                     _td(_text(r['entity_set_name'])),
                     _td(_text(r['role_name'])),
                     _td(_text(r['role_multiplicity'])),
-                    remove_role_button
+                    _td(remove_role_button)
                 )
             );
         }
@@ -464,10 +549,10 @@ function erdv_init() {
     });
     
     var erd_canvas_container = document.getElementById('erd-canvas-container')
-    var erd_canvas = document.getElementById('erd-canvas');
-    erd_canvas.width = erd_canvas_container.clientWidth - 10;
-    erd_canvas.height = erd_canvas_container.clientHeight - 10;
-    const erd_canvas_ctx = erd_canvas.getContext("2d");
+    const erd_canvas = document.getElementById('erd-canvas');
+    erd_canvas.width = erd['width']
+    erd_canvas.height = erd['height']
+    var erd_canvas_ctx = erd_canvas.getContext("2d");
     erd_canvas_ctx.font = "16px serif";
     
 

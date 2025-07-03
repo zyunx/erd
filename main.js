@@ -4,6 +4,6 @@ console.log("Hello, ERD!");
 // Model
 erd = erd_create();
 // View
-erdv = erdv_init();
+erdv = erdv_init(erd);
 // Presentor
 erdp = erdp_create(erd, erdv);
