@@ -26,7 +26,9 @@ function erdv_init(erd) {
 
         /* methods */
         draw_entity_set,
+        draw_entity_set_selection,
         draw_relationship_set,
+        draw_relationship_set_selection,
         clear,
         change_canvas_size,
         show_entity_set_properties,
@@ -35,6 +37,9 @@ function erdv_init(erd) {
         show_erd_props,
         get_save_file_handle,
     };
+
+    const SELECTION_STYLE_LINE_DASH = [3, 3]
+    const SELECTION_STYLE_PADDING = 3
 
     function clear()
     {
@@ -59,6 +64,19 @@ function erdv_init(erd) {
         const font_x = e['x'] - text_g.width/2;
         const font_y = e['y'] + _text_height(text_g)/2;
         erd_canvas_ctx.fillText(e_name, font_x, font_y);
+    }
+
+    function draw_entity_set_selection(e)
+    {
+        const x1 = e['x'] - e['width']/2;
+        const y1 = e['y'] - e['height']/2;
+
+        let lineDash = erd_canvas_ctx.getLineDash()
+        const xgap = SELECTION_STYLE_PADDING
+        const ygap = SELECTION_STYLE_PADDING
+        erd_canvas_ctx.setLineDash(SELECTION_STYLE_LINE_DASH)
+        erd_canvas_ctx.strokeRect(x1 - xgap, y1 - ygap, e['width'] + 2*xgap, e['height'] + 2*ygap);
+        erd_canvas_ctx.setLineDash(lineDash)
     }
 
     function _text_height(text_measure)
@@ -118,6 +136,42 @@ function erdv_init(erd) {
             _draw_role_name_label(role);
             _draw_role_multiplicity_label(role);
         }
+    }
+
+    function draw_relationship_set_selection(r, entity_sets)
+    {
+        const p1 = {
+            x: r['x'] - r['width']/2,
+            y: r['y'],
+        };
+        const p2 = {
+            x: r['x'],
+            y: r['y'] + r['height']/2,
+        };
+        const p3 = {
+            x: r['x'] + r['width']/2,
+            y: r['y'],
+        };
+        const p4 = {
+            x: r['x'],
+            y: r['y'] - r['height']/2,
+        };
+
+        // draw shape
+        let lineDash = erd_canvas_ctx.getLineDash()
+        erd_canvas_ctx.setLineDash([3, 3])
+
+        const ygap = SELECTION_STYLE_PADDING
+        const xgap = SELECTION_STYLE_PADDING * r['width'] / r['height']
+        erd_canvas_ctx.beginPath();
+        erd_canvas_ctx.moveTo(p1['x'] - xgap, p1['y']);
+        erd_canvas_ctx.lineTo(p2['x'], p2['y'] + ygap);
+        erd_canvas_ctx.lineTo(p3['x'] + xgap, p3['y']);
+        erd_canvas_ctx.lineTo(p4['x'], p4['y'] - ygap);
+        erd_canvas_ctx.closePath();
+        erd_canvas_ctx.stroke();
+
+        erd_canvas_ctx.setLineDash(lineDash)
     }
 
     function _draw_role_name_label(role)
@@ -357,12 +411,12 @@ function erdv_init(erd) {
         button_change_settings.innerText = 'Change';
         button_change_settings.addEventListener('click', evt => {
             erdv['on_settings_change']({
-                "width": canvas_width_input.value,
-                "height": canvas_height_input.value,
-                'entity_set.width' : entity_set_width_input.value,
-                'entity_set.height': entity_set_height_input.value,
-                'relationship_set.width': relationship_set_width_input.value,
-                'relationship_set.height': relationship_set_height_input.value,
+                "width": parseInt(canvas_width_input.value),
+                "height": parseInt(canvas_height_input.value),
+                'entity_set.width' : parseInt(entity_set_width_input.value),
+                'entity_set.height': parseInt(entity_set_height_input.value),
+                'relationship_set.width': parseInt(relationship_set_width_input.value),
+                'relationship_set.height': parseInt(relationship_set_height_input.value),
             });
         });
 

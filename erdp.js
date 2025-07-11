@@ -27,8 +27,6 @@ function erdp_create(erd, erdv)
             if (obj == null)
             {
                 object_selected = null;
-                show_erd_props();
-                //hide_object_props();
             }
             else
             {
@@ -48,6 +46,7 @@ function erdp_create(erd, erdv)
             to_draw = null;
         }
 
+        update();
         
     };
 
@@ -67,7 +66,7 @@ function erdp_create(erd, erdv)
                 erd_move_entity_set(erd, object_selected, tx, ty)
             }
 
-            update_canvas();
+            update();
         }
     };
 
@@ -197,9 +196,21 @@ function erdp_create(erd, erdv)
     {
         object_selected = obj;
         selected_shape_mouse_offset = shape_mouse_offset;
+    }
 
-        show_object_props(obj);
-        
+    function show_object_selection(obj)
+    {
+        console.log("show_object_selection: ", obj)
+        if (obj['type'] == 'entity_set')
+        {
+            erdv['draw_entity_set_selection'](obj);
+        }
+        else if (obj['type'] == 'relationship_set')
+        {
+            erdv['draw_relationship_set_selection'](
+                to_relationship_set_view(obj),
+                erd['entity_sets']);
+        }
     }
 
     function show_object_props(obj)
@@ -215,6 +226,7 @@ function erdp_create(erd, erdv)
                 erd['entity_sets']);
         }
     }
+
 
     /*
      * Decouple model and view
@@ -274,10 +286,12 @@ function erdp_create(erd, erdv)
         if (object_selected)
         {
             show_object_props(object_selected);
+            show_object_selection(object_selected);
         }
         else
         {
             hide_object_props();
+            show_erd_props();
         }
     }
 }
