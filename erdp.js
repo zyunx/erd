@@ -110,7 +110,7 @@ function erdp_create(erd, erdv)
 
             object_selected = null
 
-            update_canvas();
+            update();
         }
     }
 
