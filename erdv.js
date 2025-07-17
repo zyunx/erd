@@ -18,6 +18,7 @@ function erdv_init(erd) {
         on_canvas_mouse_up: function (x, y) {},
         /* for property box */
         on_props_changed: function(props) {},
+        on_props_remove_button_click: function() { console.log('on_props_remove_button_click') },
         on_relationship_set_add_role(entity_set_name, role_name, role_multiplicity) {},
         on_relationship_set_remove_role(relationship_set, role) { console.log("on_relationship_set_remove_role stub"); },
         async on_save() { console.log('on_save'); },
@@ -446,6 +447,12 @@ function erdv_init(erd) {
         props_tr.appendChild(props_value);
         props_tab.appendChild(props_tr);
         box.appendChild(props_tab);
+
+        const remove_button = document.createElement('button')
+        remove_button.innerText = 'Remove'
+        remove_button.addEventListener('click', erdv['on_props_remove_button_click'])
+        box.appendChild(remove_button)
+
         return box;
     }
 
@@ -538,6 +545,11 @@ function erdv_init(erd) {
         );
         roles.appendChild(roles_table);
         box.appendChild(roles);
+
+        const remove_button = document.createElement('button')
+        remove_button.innerText = 'Remove'
+        remove_button.addEventListener('click', erdv['on_props_remove_button_click'])
+        box.appendChild(remove_button)
 
         return box;
     }

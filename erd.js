@@ -602,3 +602,44 @@ function erd_change_settings(erd, settings) {
 
     erd_layout_role_connection_lines(erd);
 }
+
+function erd_remove_entity_set(erd, entity_set)
+{
+    for (let i = 0; i < erd["entity_sets"].length; i++) {
+        const e = erd["entity_sets"][i];
+        if (e['id'] == entity_set['id'])
+        {
+            erd["entity_sets"].splice(i, 1)
+            break;
+        }
+    }
+
+    for (let i = 0; i < erd["relationship_sets"].length; i++) {
+        const r = erd["relationship_sets"][i];
+        for (let j = 0; j < r['roles'].length; )
+        {
+            const role = r['roles'][j]
+            if (entity_set['id'] == role['entity_set_id'])
+            {
+                r['roles'].splice(j, 1)
+            }
+            else
+            {
+                j++
+            }
+        }
+    }
+}
+
+
+function erd_remove_relationship_set(erd, relationship_set)
+{
+    for (let i = 0; i < erd["relationship_sets"].length; i++) {
+        const r = erd["relationship_sets"][i];
+        if (relationship_set['id'] == r['id'])
+        {
+            erd["relationship_sets"].splice(i, 1);
+            break;
+        }
+    }
+}

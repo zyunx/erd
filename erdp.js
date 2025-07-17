@@ -95,6 +95,25 @@ function erdp_create(erd, erdv)
         }
     }
 
+    erdv['on_props_remove_button_click'] = function()
+    {
+        if (object_selected)
+        {
+            if (object_selected['type'] == 'entity_set')
+            {
+                erd_remove_entity_set(erd, object_selected);
+            }
+            else if (object_selected['type'] == 'relationship_set')
+            {
+                erd_remove_relationship_set(erd, object_selected);
+            }
+
+            object_selected = null
+
+            update_canvas();
+        }
+    }
+
     erdv['on_relationship_set_add_role'] = function(entity_set_name, role_name, role_multiplicity)
     {
         console.log('on_relationship_set_add_role', entity_set_name, role_name, role_multiplicity);
