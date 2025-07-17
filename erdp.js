@@ -114,11 +114,11 @@ function erdp_create(erd, erdv)
         }
     }
 
-    erdv['on_relationship_set_add_role'] = function(entity_set_name, role_name, role_multiplicity)
+    erdv['on_relationship_set_add_role'] = function(entity_set_id, role_name, role_multiplicity)
     {
-        console.log('on_relationship_set_add_role', entity_set_name, role_name, role_multiplicity);
-        const relationship_set = get_relationship_set_by_name(erd, object_selected['name']);
-        const entity_set = erd_get_entity_set_by_name(erd, entity_set_name);
+        console.log('on_relationship_set_add_role', entity_set_id, role_name, role_multiplicity);
+        const relationship_set = erd_get_relationship_set_by_id(erd, object_selected['id']);
+        const entity_set = erd_get_entity_set_by_id(erd, entity_set_id);
         
         erd_relationship_set_add_role(erd, relationship_set, entity_set, role_name, role_multiplicity);
 

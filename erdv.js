@@ -19,7 +19,7 @@ function erdv_init(erd) {
         /* for property box */
         on_props_changed: function(props) {},
         on_props_remove_button_click: function() { console.log('on_props_remove_button_click') },
-        on_relationship_set_add_role(entity_set_name, role_name, role_multiplicity) {},
+        on_relationship_set_add_role(entity_set_id, role_name, role_multiplicity) {},
         on_relationship_set_remove_role(relationship_set, role) { console.log("on_relationship_set_remove_role stub"); },
         async on_save() { console.log('on_save'); },
 
@@ -514,9 +514,10 @@ function erdv_init(erd) {
         const role_entity_set = document.createElement('select');
         for (const e of entity_sets)
         {
+            const id = e['id']
             const name = e['name'];
             role_entity_set.appendChild(
-                _html(`<option value="${name}">${name}</option>`)
+                _html(`<option value="${id}">${name}</option>`)
             );
         }
         const role_name = document.createElement('input', {
