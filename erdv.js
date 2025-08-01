@@ -360,54 +360,64 @@ function erdv_init(erd) {
     {
         const box = document.createElement('div');
 
-        const props_tab = document.createElement('table');
+        box.appendChild(_html('<h2>Entity Set</h2>'))
+        const entity_set_props_tab = _html('<table class="basic_property_table"></table>');
 
-        props_tab.appendChild(_html('<tr><th colspan="2">Entity Set<th></tr>'));
+
         const entity_set_width_input = document.createElement('input');
         entity_set_width_input.value = erd['entity_set.width'];
-        props_tab.appendChild(_tr(
-            _td(_text('Width: ')),
+        entity_set_props_tab.appendChild(_tr(
+            _th(_text('Width: ')),
             _td(entity_set_width_input)
         ));
 
         const entity_set_height_input = document.createElement('input');
         entity_set_height_input.value = erd['entity_set.height'];
-        props_tab.appendChild(_tr(
-            _td(_text('Height: ')),
+
+        entity_set_props_tab.appendChild(_tr(
+            _th(_text('Height: ')),
             _td(entity_set_height_input)
         ));
 
-        props_tab.appendChild(_html('<tr><th colspan="2">Relationship Set<th></tr>'));
+        box.appendChild(entity_set_props_tab)
+
+        box.appendChild(_html('<h2>Relationship Set</h2>'))
+        const relationship_set_props_tab = _html('<table class="basic_property_table"></table>');
         const relationship_set_width_input = document.createElement('input');
         relationship_set_width_input.value = erd['relationship_set.width'];
-        props_tab.appendChild(_tr(
-            _td(_text('Width: ')),
+        relationship_set_props_tab.appendChild(_tr(
+            _th(_text('Width: ')),
             _td(relationship_set_width_input)
         ));
 
         const relationship_set_height_input = document.createElement('input');
         relationship_set_height_input.value = erd['relationship_set.height'];
-        props_tab.appendChild(_tr(
-            _td(_text('Height: ')),
+        relationship_set_props_tab.appendChild(_tr(
+            _th(_text('Height: ')),
             _td(relationship_set_height_input)
         ));
 
-        props_tab.appendChild(_html('<tr><th colspan="2">Canvas<th></tr>'));
+        box.appendChild(relationship_set_props_tab)
+
+        box.appendChild(_html('<h2>Canvas</h2>'))
+        const canvas_props_tab = _html('<table class="basic_property_table"></table>');
         const canvas_width_input = document.createElement('input');
         canvas_width_input.value = erd['width'];
-        props_tab.appendChild(_tr(
-            _td(_text('Width: ')),
+        canvas_props_tab.appendChild(_tr(
+            _th(_text('Width: ')),
             _td(canvas_width_input)
         ));
 
         const canvas_height_input = document.createElement('input');
         canvas_height_input.value = erd['height'];
-        props_tab.appendChild(_tr(
-            _td(_text('Height: ')),
+        canvas_props_tab.appendChild(_tr(
+            _th(_text('Height: ')),
             _td(canvas_height_input)
         ));
+        box.appendChild(canvas_props_tab)
 
 
+        const button_container = _html('<div class="button-container"></div>')
         const button_change_settings = document.createElement('button');
         button_change_settings.innerText = 'Change';
         button_change_settings.addEventListener('click', evt => {
@@ -420,9 +430,9 @@ function erdv_init(erd) {
                 'relationship_set.height': parseInt(relationship_set_height_input.value),
             });
         });
+        button_container.appendChild(button_change_settings);
 
-        box.appendChild(props_tab);
-        box.appendChild(button_change_settings);
+        box.appendChild(button_container);
         return box;
     }
 
@@ -430,12 +440,13 @@ function erdv_init(erd) {
     {
         const box = document.createElement('div');
 
-        const props_tab = document.createElement('table');
+        const props_tab = _html('<table class="basic_property_table"></table>');
         const props_tr = document.createElement('tr');
         const props_name = document.createElement('th');
         props_name.innerText = 'Name';
         const props_value = document.createElement('td');
         const props_name_input = document.createElement('input');
+        props_name_input.style.width = '100%';
         props_name_input.value = e['name'];
         props_name_input.addEventListener('input', ev => {
             erdv['on_props_changed']({
@@ -448,10 +459,13 @@ function erdv_init(erd) {
         props_tab.appendChild(props_tr);
         box.appendChild(props_tab);
 
+        const button_container = _html('<div class="button-container"></div>')
         const remove_button = document.createElement('button')
         remove_button.innerText = 'Remove'
         remove_button.addEventListener('click', erdv['on_props_remove_button_click'])
-        box.appendChild(remove_button)
+        button_container.appendChild(remove_button);
+
+        box.appendChild(button_container)
 
         return box;
     }
@@ -460,12 +474,13 @@ function erdv_init(erd) {
     {
         const box = document.createElement('div');
 
-        const props_tab = document.createElement('table');
+        const props_tab = _html('<table class="basic_property_table"></table>');
         const props_tr = document.createElement('tr');
         const props_name = document.createElement('th');
         props_name.innerText = 'Name';
         const props_value = document.createElement('td');
         const props_name_input = document.createElement('input');
+        props_name_input.style.width = '100%';
         props_name_input.value = relationship_set['name'];
         props_name_input.addEventListener('input', ev => {
             erdv['on_props_changed']({
@@ -480,15 +495,15 @@ function erdv_init(erd) {
 
         // Roles table
         const roles = _html('<div>\
-                <div>Roles</div>\
+                <h2>Roles</h2>\
             </div>');
 
-        const roles_table = _html('<table>\
+        const roles_table = _html('<table class="role_table" cellspacing="2" border="1">\
                 <tr>\
-                    <th>Entity</th>\
-                    <th>Role</th>\
-                    <th>Mutiplicity</th>\
-                    <th>Action</th>\
+                    <th>Entity Set</th>\
+                    <th>R</th>\
+                    <th>M</th>\
+                    <th></th>\
                 </tr>\
             </table>');
         for (const r of relationship_set['roles'])
@@ -520,14 +535,16 @@ function erdv_init(erd) {
                 _html(`<option value="${id}">${name}</option>`)
             );
         }
+        role_entity_set.style.width = '100%';
+
         const role_name = document.createElement('input', {
             'type': 'text'
         });
-        role_name.style.width = '8em';
+        role_name.style.width = '100%';
         const role_multiplicity = document.createElement('input', {
             'type': 'text'
         });
-        role_multiplicity.style.width = '2em';
+        role_multiplicity.style.width = '100%';
         const role_button = document.createElement('button', {
             'type': 'button'
         });
@@ -547,10 +564,13 @@ function erdv_init(erd) {
         roles.appendChild(roles_table);
         box.appendChild(roles);
 
+        const button_container = _html('<div class="button-container"></div>')
         const remove_button = document.createElement('button')
         remove_button.innerText = 'Remove'
         remove_button.addEventListener('click', erdv['on_props_remove_button_click'])
-        box.appendChild(remove_button)
+        button_container.appendChild(remove_button)
+
+        box.appendChild(button_container)
 
         return box;
     }
@@ -568,6 +588,13 @@ function erdv_init(erd) {
     function _td(child)
     {
         const td = document.createElement('td');
+        td.appendChild(child);
+        return td;
+    }
+
+    function _th(child)
+    {
+        const td = document.createElement('th');
         td.appendChild(child);
         return td;
     }
