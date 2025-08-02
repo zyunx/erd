@@ -30,6 +30,7 @@ function erdv_init(erd) {
         draw_entity_set_selection,
         draw_relationship_set,
         draw_relationship_set_selection,
+        draw_rectangle_selection,
         clear,
         change_canvas_size,
         show_entity_set_properties,
@@ -169,6 +170,23 @@ function erdv_init(erd) {
         erd_canvas_ctx.lineTo(p2['x'], p2['y'] + ygap);
         erd_canvas_ctx.lineTo(p3['x'] + xgap, p3['y']);
         erd_canvas_ctx.lineTo(p4['x'], p4['y'] - ygap);
+        erd_canvas_ctx.closePath();
+        erd_canvas_ctx.stroke();
+
+        erd_canvas_ctx.setLineDash(lineDash)
+    }
+
+    function draw_rectangle_selection(rect)
+    {
+        // draw shape
+        let lineDash = erd_canvas_ctx.getLineDash()
+        erd_canvas_ctx.setLineDash([3, 3])
+
+        erd_canvas_ctx.beginPath();
+        erd_canvas_ctx.moveTo(rect[0], rect[1]);
+        erd_canvas_ctx.lineTo(rect[0] + rect[2], rect[1]);
+        erd_canvas_ctx.lineTo(rect[0] + rect[2], rect[1] + rect[3]);
+        erd_canvas_ctx.lineTo(rect[0], rect[1] + rect[3]);
         erd_canvas_ctx.closePath();
         erd_canvas_ctx.stroke();
 

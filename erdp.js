@@ -5,11 +5,16 @@
 function erdp_create(erd, erdv)
 {
     var canvas_mouse_down = false;
+    var canvas_mouse_down_coordinate = null;
+    var current_mouse_target = null;
+    const TARGET_CANVAS = 'TARGET_CANVAS';
+    const TARGET_SINGLE_OBJECT = 'TARGET_SINGLE_OBJECT';
+    const TARGET_RECTANGEL_SELECTION = 'TARGET_RECTANGEL_SELECTION';
+    var target_offset_from_mouse = null;
+
     var object_selected = null;
-    var selected_shape_mouse_offset = {
-        x: 0,
-        y: 0,
-    };
+    var selection_rectangle = null;
+    
     var to_draw = null;
     const TO_DRAW_ENTITY_SET = "ENTITY_SET";
     const TO_DRAW_RELATIONSHIP_SET = "RELATIONSHIP_SET";
@@ -19,43 +24,93 @@ function erdp_create(erd, erdv)
 
     erdv['on_canvas_mouse_down'] = function(x, y)
     {
+        /* If the cursor is in the selection rectangle:
+         *     may be move multiple objects
+         * else if the cursor is on an object:
+         *     move the object
+         * else if to draw object:
+         *     draw object
+         * else
+         *     multiple selection or select canvas
+         */
         console.log("erdp: on_canvas_mouse_down");
         canvas_mouse_down = true;
+        canvas_mouse_down_coordinate = [x, y];
 
-        if (to_draw == null) {
-            const obj = get_object_by_coordinate(erd, x, y)
-            if (obj == null)
-            {
-                object_selected = null;
-            }
-            else
-            {
-                select_object(obj, {
-                    x: obj['x']-x, 
-                    y: obj['y']-y
-                });
-            }
+        if (is_in_selection_rectangle(x, y))
+        {
+            // selection_rectangle must not be null
+            current_mouse_target = TARGET_RECTANGEL_SELECTION;
+            target_offset_from_mouse = [
+                selection_rectangle[0] - x,
+                selection_rectangle[1] - y
+            ];
+            console.log('target_offset_from_mouse:', target_offset_from_mouse)
         }
         else
         {
-            if (to_draw == TO_DRAW_ENTITY_SET) {
-                draw_entity_set(x, y);            
-            } else if (to_draw == TO_DRAW_RELATIONSHIP_SET) {
-                draw_relationship_set(x, y);
-            }
-            to_draw = null;
-        }
+            selection_rectangle = null;
 
-        update();
+            object_selected = null;
+
+            const obj = get_object_by_coordinate(erd, x, y)
+            if (obj != null)
+            {
+                current_mouse_target = TARGET_SINGLE_OBJECT;
+                target_offset_from_mouse = [
+                    obj['x'] - x,
+                    obj['y'] - y
+                ];
+                select_object(obj);
+            }
+            else if (to_draw != null) {
+                current_mouse_target = TARGET_SINGLE_OBJECT;
+                target_offset_from_mouse = [0, 0];
+                if (to_draw == TO_DRAW_ENTITY_SET) {
+                    draw_entity_set(x, y);            
+                } else if (to_draw == TO_DRAW_RELATIONSHIP_SET) {
+                    draw_relationship_set(x, y);
+                }    
+            }
+            else
+            {
+                current_mouse_target = TARGET_CANVAS;
+                target_offset_from_mouse = [-x, -y];
+            }
+        }
         
+        to_draw = null;
+        
+        update();
     };
 
     erdv['on_canvas_mouse_move'] = function(x, y)
     {
-        if (canvas_mouse_down && object_selected)
+        /* If mouse down:
+         *    if current mouse target is rectangle selection:
+         *       move rectangle selection and objects intersected by the selection
+         *    else if single object:
+         *        drag object
+         *    else:
+         *        create a selection rectangle
+         */
+        if (!canvas_mouse_down)
+            return;
+
+        if (current_mouse_target == TARGET_RECTANGEL_SELECTION)
         {
-            const tx = x + selected_shape_mouse_offset['x'];
-            const ty = y + selected_shape_mouse_offset['y'];
+            // move selection rectangle
+            selection_rectangle = [
+                x + target_offset_from_mouse[0],
+                y + target_offset_from_mouse[1],
+                selection_rectangle[2],
+                selection_rectangle[3]
+            ];
+        }
+        else if (current_mouse_target == TARGET_SINGLE_OBJECT)
+        {
+            const tx = x + target_offset_from_mouse[0];
+            const ty = y + target_offset_from_mouse[1];
 
             if (object_selected['type'] == 'relationship_set')
             {
@@ -65,9 +120,19 @@ function erdp_create(erd, erdv)
             {
                 erd_move_entity_set(erd, object_selected, tx, ty)
             }
-
-            update();
         }
+        else
+        {
+            /* rectangle selection (x, y, x_offset, y_offset)*/
+            selection_rectangle = [canvas_mouse_down_coordinate[0],
+                                    canvas_mouse_down_coordinate[1],
+                                    x - canvas_mouse_down_coordinate[0],
+                                    y - canvas_mouse_down_coordinate[1]
+                                ];
+            //console.log('selection_rectangle: ', selection_rectangle);
+        }
+
+        update();
     };
 
     erdv['on_canvas_mouse_up'] = function(x, y)
@@ -187,10 +252,7 @@ function erdp_create(erd, erdv)
             name: e['name'],
         });
 
-        select_object(e, {
-            x: 0, 
-            y: 0,
-        });
+        select_object(e);
     };
 
     function draw_relationship_set(px, py)
@@ -206,15 +268,12 @@ function erdp_create(erd, erdv)
             roles: r['roles'],
         });
 
-        select_object(r, {
-            x: 0, y: 0,
-        });
+        select_object(r);
     }
 
-    function select_object(obj, shape_mouse_offset)
+    function select_object(obj)
     {
         object_selected = obj;
-        selected_shape_mouse_offset = shape_mouse_offset;
     }
 
     function show_object_selection(obj)
@@ -230,6 +289,11 @@ function erdp_create(erd, erdv)
                 to_relationship_set_view(obj),
                 erd['entity_sets']);
         }
+    }
+
+    function show_rectangle_selection(rect)
+    {
+        erdv['draw_rectangle_selection'](rect);
     }
 
     function show_object_props(obj)
@@ -268,7 +332,7 @@ function erdp_create(erd, erdv)
     }
 
 
-    function hide_object_props()
+    function hide_props()
     {
         erdv['hide_props']();
     }
@@ -296,21 +360,70 @@ function erdp_create(erd, erdv)
             const r = erd["relationship_sets"][i];
             erdv['draw_relationship_set'](r);
         }
+
+        if (object_selected)
+        {
+            show_object_selection(object_selected);
+        }
+
+        if (selection_rectangle)
+        {
+            show_rectangle_selection(selection_rectangle);
+        }
     }
 
     function update()
     {
         update_canvas();
 
+        // show property box
+        update_property_box();
+    }
+
+    function update_property_box()
+    {
         if (object_selected)
         {
             show_object_props(object_selected);
-            show_object_selection(object_selected);
         }
         else
         {
-            hide_object_props();
-            show_erd_props();
+            hide_props();
+
+            if (selection_rectangle == null)
+            {
+                show_erd_props();
+            }
         }
+    }
+
+    function is_in_selection_rectangle(x, y)
+    {
+        if (selection_rectangle == null)
+        {
+            return false;
+        }
+
+        // normalize rectangele, ie. offset must be positive
+        const r = [
+            selection_rectangle[0],
+            selection_rectangle[1],
+            selection_rectangle[2],
+            selection_rectangle[3]
+        ];
+        if (r[2] < 0)
+        {
+            r[0] = r[0] + r[2];
+            r[2] = -r[2];
+        }
+        if (r[3] < 0)
+        {
+            r[1] = r[1] + r[3];
+            r[3] = -r[3];
+        }
+
+        const x_offset = x - r[0];
+        const y_offset = y - r[1];
+        return (x_offset > 0 && x_offset < r[2] && y_offset > 0 && y_offset < r[3]);
     }
 }
