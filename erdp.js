@@ -9,11 +9,13 @@ function erdp_create(erd, erdv)
     var current_mouse_target = null;
     const TARGET_CANVAS = 'TARGET_CANVAS';
     const TARGET_SINGLE_OBJECT = 'TARGET_SINGLE_OBJECT';
-    const TARGET_RECTANGEL_SELECTION = 'TARGET_RECTANGEL_SELECTION';
+    const TARGET_RECTANGLE_SELECTION = 'TARGET_RECTANGLE_SELECTION';
     var target_offset_from_mouse = null;
 
     var object_selected = null;
     var selection_rectangle = null;
+    var objects_in_selection_rectangle = [];
+    var objects_in_selection_rectangle_offset_from_mouse = [];
     
     var to_draw = null;
     const TO_DRAW_ENTITY_SET = "ENTITY_SET";
@@ -40,11 +42,14 @@ function erdp_create(erd, erdv)
         if (is_in_selection_rectangle(x, y))
         {
             // selection_rectangle must not be null
-            current_mouse_target = TARGET_RECTANGEL_SELECTION;
+            current_mouse_target = TARGET_RECTANGLE_SELECTION;
             target_offset_from_mouse = [
                 selection_rectangle[0] - x,
                 selection_rectangle[1] - y
             ];
+            objects_in_selection_rectangle_offset_from_mouse = objects_in_selection_rectangle.map(
+                obj => [obj['x'] - x, obj['y'] - y]
+            );
             console.log('target_offset_from_mouse:', target_offset_from_mouse)
         }
         else
@@ -97,7 +102,7 @@ function erdp_create(erd, erdv)
         if (!canvas_mouse_down)
             return;
 
-        if (current_mouse_target == TARGET_RECTANGEL_SELECTION)
+        if (current_mouse_target == TARGET_RECTANGLE_SELECTION)
         {
             // move selection rectangle
             selection_rectangle = [
@@ -106,6 +111,23 @@ function erdp_create(erd, erdv)
                 selection_rectangle[2],
                 selection_rectangle[3]
             ];
+
+            // move objects
+            for (let i = 0; i < objects_in_selection_rectangle.length; i++)
+            {
+                const obj = objects_in_selection_rectangle[i];
+                const offset = objects_in_selection_rectangle_offset_from_mouse[i];
+                const tx = x + offset[0];
+                const ty = y + offset[1];
+                if (obj['type'] == 'relationship_set')
+                {
+                    erd_move_relationship_set(erd, obj, tx, ty)
+                }
+                else if (obj['type'] == 'entity_set')
+                {
+                    erd_move_entity_set(erd, obj, tx, ty)
+                }
+            }
         }
         else if (current_mouse_target == TARGET_SINGLE_OBJECT)
         {
@@ -129,7 +151,7 @@ function erdp_create(erd, erdv)
                                     x - canvas_mouse_down_coordinate[0],
                                     y - canvas_mouse_down_coordinate[1]
                                 ];
-            //console.log('selection_rectangle: ', selection_rectangle);
+            objects_in_selection_rectangle = _compute_objects_in_rectangle(selection_rectangle);
         }
 
         update();
@@ -214,6 +236,7 @@ function erdp_create(erd, erdv)
         file_handle = file;
 
         object_selected = null;
+        selection_rectangle = null;
 
         erd = JSON.parse(await (await file_handle.getFile()).text());
 
@@ -369,6 +392,11 @@ function erdp_create(erd, erdv)
         if (selection_rectangle)
         {
             show_rectangle_selection(selection_rectangle);
+
+            if (objects_in_selection_rectangle)
+            {
+                objects_in_selection_rectangle.forEach(obj => show_object_selection(obj));
+            }
         }
     }
 
@@ -404,12 +432,17 @@ function erdp_create(erd, erdv)
             return false;
         }
 
+        return _is_point_in_rectangle(x, y, selection_rectangle);
+    }
+
+    function _is_point_in_rectangle(x, y, rect)
+    {
         // normalize rectangele, ie. offset must be positive
         const r = [
-            selection_rectangle[0],
-            selection_rectangle[1],
-            selection_rectangle[2],
-            selection_rectangle[3]
+            rect[0],
+            rect[1],
+            rect[2],
+            rect[3]
         ];
         if (r[2] < 0)
         {
@@ -425,5 +458,53 @@ function erdp_create(erd, erdv)
         const x_offset = x - r[0];
         const y_offset = y - r[1];
         return (x_offset > 0 && x_offset < r[2] && y_offset > 0 && y_offset < r[3]);
+    }
+
+    function _is_all_points_in_rect(points, rect)
+    {
+        return points.every(p => _is_point_in_rectangle(p[0], p[1], rect));
+    }
+
+    function _compute_objects_in_rectangle(rect)
+    {
+        const results = [];
+        for (let i = 0; i < erd["entity_sets"].length; i++) {
+            const e = erd["entity_sets"][i];
+            const center_x = e['x'];
+            const center_y = e['y'];
+            const half_width = e['width'] / 2;
+            const half_height = e['height'] / 2;
+
+            const entity_sets_endpoints = [
+                [center_x - half_width, center_y - half_height],
+                [center_x + half_width, center_y - half_height],
+                [center_x + half_width, center_y + half_height],
+                [center_x - half_width, center_y + half_height],
+            ]
+            if (_is_all_points_in_rect(entity_sets_endpoints, rect))
+            {
+                results.push(e);
+            }
+        }
+
+        for (let i = 0; i < erd["relationship_sets"].length; i++) {
+            const r = erd["relationship_sets"][i];
+            const center_x = r['x'];
+            const center_y = r['y'];
+            const half_width = r['width'] / 2;
+            const half_height = r['height'] / 2;
+
+            const relationsip_sets_endpoints = [
+                [center_x - half_width, center_y],
+                [center_x, center_y - half_height],
+                [center_x + half_width, center_y],
+                [center_x, center_y + half_height],
+            ]
+            if (_is_all_points_in_rect(relationsip_sets_endpoints, rect))
+            {
+                results.push(r);
+            }
+        }
+        return results;
     }
 }
