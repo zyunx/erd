@@ -43,6 +43,7 @@ body {
 {
     flex-basis: auto;
     width: 30em;
+    padding: 0 0.5em;
 }
 
 #propertybox-container h1
