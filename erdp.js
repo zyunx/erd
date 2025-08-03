@@ -6,17 +6,18 @@ function erdp_create(erd, erdv)
 {
     var canvas_mouse_down = false;
     var canvas_mouse_down_coordinate = null;
+
     var current_mouse_target = null;
     const TARGET_CANVAS = 'TARGET_CANVAS';
     const TARGET_SINGLE_OBJECT = 'TARGET_SINGLE_OBJECT';
     const TARGET_RECTANGLE_SELECTION = 'TARGET_RECTANGLE_SELECTION';
-    var target_offset_from_mouse = null;
 
-    var object_selected = null;
     var selection_rectangle = null;
-    var objects_in_selection_rectangle = [];
-    var objects_in_selection_rectangle_offset_from_mouse = [];
-    
+    var offset_from_mouse_of_selectioin_rectangle = null;
+        
+    var objects_selected = []
+    var offsets_from_mouse_of_objects_selected = []
+
     var to_draw = null;
     const TO_DRAW_ENTITY_SET = "ENTITY_SET";
     const TO_DRAW_RELATIONSHIP_SET = "RELATIONSHIP_SET";
@@ -43,34 +44,32 @@ function erdp_create(erd, erdv)
         {
             // selection_rectangle must not be null
             current_mouse_target = TARGET_RECTANGLE_SELECTION;
-            target_offset_from_mouse = [
+            offset_from_mouse_of_selectioin_rectangle = [
                 selection_rectangle[0] - x,
                 selection_rectangle[1] - y
             ];
-            objects_in_selection_rectangle_offset_from_mouse = objects_in_selection_rectangle.map(
+            offsets_from_mouse_of_objects_selected = objects_selected.map(
                 obj => [obj['x'] - x, obj['y'] - y]
             );
-            console.log('target_offset_from_mouse:', target_offset_from_mouse)
+            // console.log('offsets_from_mouse_of_objects_selected:', offsets_from_mouse_of_objects_selected)
         }
         else
         {
             selection_rectangle = null;
-
-            object_selected = null;
+            objects_selected = []
 
             const obj = get_object_by_coordinate(erd, x, y)
             if (obj != null)
             {
                 current_mouse_target = TARGET_SINGLE_OBJECT;
-                target_offset_from_mouse = [
+
+                select_object(obj, [
                     obj['x'] - x,
                     obj['y'] - y
-                ];
-                select_object(obj);
+                ]);
             }
             else if (to_draw != null) {
                 current_mouse_target = TARGET_SINGLE_OBJECT;
-                target_offset_from_mouse = [0, 0];
                 if (to_draw == TO_DRAW_ENTITY_SET) {
                     draw_entity_set(x, y);            
                 } else if (to_draw == TO_DRAW_RELATIONSHIP_SET) {
@@ -80,7 +79,6 @@ function erdp_create(erd, erdv)
             else
             {
                 current_mouse_target = TARGET_CANVAS;
-                target_offset_from_mouse = [-x, -y];
             }
         }
         
@@ -106,42 +104,18 @@ function erdp_create(erd, erdv)
         {
             // move selection rectangle
             selection_rectangle = [
-                x + target_offset_from_mouse[0],
-                y + target_offset_from_mouse[1],
+                x + offset_from_mouse_of_selectioin_rectangle[0],
+                y + offset_from_mouse_of_selectioin_rectangle[1],
                 selection_rectangle[2],
                 selection_rectangle[3]
             ];
 
             // move objects
-            for (let i = 0; i < objects_in_selection_rectangle.length; i++)
-            {
-                const obj = objects_in_selection_rectangle[i];
-                const offset = objects_in_selection_rectangle_offset_from_mouse[i];
-                const tx = x + offset[0];
-                const ty = y + offset[1];
-                if (obj['type'] == 'relationship_set')
-                {
-                    erd_move_relationship_set(erd, obj, tx, ty)
-                }
-                else if (obj['type'] == 'entity_set')
-                {
-                    erd_move_entity_set(erd, obj, tx, ty)
-                }
-            }
+            _move_objects(objects_selected, x, y);
         }
         else if (current_mouse_target == TARGET_SINGLE_OBJECT)
         {
-            const tx = x + target_offset_from_mouse[0];
-            const ty = y + target_offset_from_mouse[1];
-
-            if (object_selected['type'] == 'relationship_set')
-            {
-                erd_move_relationship_set(erd, object_selected, tx, ty)
-            }
-            else if (object_selected['type'] == 'entity_set')
-            {
-                erd_move_entity_set(erd, object_selected, tx, ty)
-            }
+            _move_objects(objects_selected, x, y);
         }
         else
         {
@@ -151,16 +125,38 @@ function erdp_create(erd, erdv)
                                     x - canvas_mouse_down_coordinate[0],
                                     y - canvas_mouse_down_coordinate[1]
                                 ];
-            objects_in_selection_rectangle = _compute_objects_in_rectangle(selection_rectangle);
+            objects_selected = _compute_objects_in_rectangle(selection_rectangle);
         }
 
-        update();
+        update_canvas();
     };
+
+    function _move_objects(objects, mouse_x, mouse_y)
+    {
+        // move objects
+        for (let i = 0; i < objects.length; i++)
+        {
+            const obj = objects[i];
+            const offset = offsets_from_mouse_of_objects_selected[i];
+            const tx = mouse_x + offset[0];
+            const ty = mouse_y + offset[1];
+            if (obj['type'] == 'relationship_set')
+            {
+                erd_move_relationship_set(erd, obj, tx, ty)
+            }
+            else if (obj['type'] == 'entity_set')
+            {
+                erd_move_entity_set(erd, obj, tx, ty)
+            }
+        }
+    }
 
     erdv['on_canvas_mouse_up'] = function(x, y)
     {
         console.log("erdp: on_canvas_mouse_up");
         canvas_mouse_down = false;
+
+        update();
     };
 
     erdv['on_entity_set_to_be_drawed'] = function()
@@ -175,27 +171,27 @@ function erdp_create(erd, erdv)
 
     erdv['on_props_changed'] = function(props) 
     {
-        if (object_selected)
+        if (objects_selected.length == 1)
         {
-            object_selected['name'] = props['name'];
+            objects_selected[0]['name'] = props['name'];
             update_canvas();
         }
     }
 
     erdv['on_props_remove_button_click'] = function()
     {
-        if (object_selected)
+        if (objects_selected.length == 1)
         {
-            if (object_selected['type'] == 'entity_set')
+            if (objects_selected[0]['type'] == 'entity_set')
             {
-                erd_remove_entity_set(erd, object_selected);
+                erd_remove_entity_set(erd, objects_selected[0]);
             }
-            else if (object_selected['type'] == 'relationship_set')
+            else if (objects_selected[0]['type'] == 'relationship_set')
             {
-                erd_remove_relationship_set(erd, object_selected);
+                erd_remove_relationship_set(erd, objects_selected[0]);
             }
 
-            object_selected = null
+            objects_selected = []
 
             update();
         }
@@ -204,7 +200,7 @@ function erdp_create(erd, erdv)
     erdv['on_relationship_set_add_role'] = function(entity_set_id, role_name, role_multiplicity)
     {
         console.log('on_relationship_set_add_role', entity_set_id, role_name, role_multiplicity);
-        const relationship_set = erd_get_relationship_set_by_id(erd, object_selected['id']);
+        const relationship_set = erd_get_relationship_set_by_id(erd, objects_selected[0]['id']);
         const entity_set = erd_get_entity_set_by_id(erd, entity_set_id);
         
         erd_relationship_set_add_role(erd, relationship_set, entity_set, role_name, role_multiplicity);
@@ -235,8 +231,8 @@ function erdp_create(erd, erdv)
     erdv['on_load'] = async function (file) {
         file_handle = file;
 
-        object_selected = null;
-        selection_rectangle = null;
+        objects_selected = [];
+        selection_rectangle = null;select_object
 
         erd = JSON.parse(await (await file_handle.getFile()).text());
 
@@ -275,7 +271,7 @@ function erdp_create(erd, erdv)
             name: e['name'],
         });
 
-        select_object(e);
+        select_object(e, [0, 0]);
     };
 
     function draw_relationship_set(px, py)
@@ -291,12 +287,13 @@ function erdp_create(erd, erdv)
             roles: r['roles'],
         });
 
-        select_object(r);
+        select_object(r, [0, 0]);
     }
 
-    function select_object(obj)
+    function select_object(obj, offset)
     {
-        object_selected = obj;
+        objects_selected = [obj];
+        offsets_from_mouse_of_objects_selected = [offset];
     }
 
     function show_object_selection(obj)
@@ -357,11 +354,14 @@ function erdp_create(erd, erdv)
 
     function hide_props()
     {
+        console.log('hide_props')
+
         erdv['hide_props']();
     }
 
     function show_erd_props()
     {
+        console.log('show_erd_props')
         erdv['show_erd_props'](erd);
     }
 
@@ -384,19 +384,11 @@ function erdp_create(erd, erdv)
             erdv['draw_relationship_set'](r);
         }
 
-        if (object_selected)
-        {
-            show_object_selection(object_selected);
-        }
+        objects_selected.forEach(obj => show_object_selection(obj));
 
         if (selection_rectangle)
         {
             show_rectangle_selection(selection_rectangle);
-
-            if (objects_in_selection_rectangle)
-            {
-                objects_in_selection_rectangle.forEach(obj => show_object_selection(obj));
-            }
         }
     }
 
@@ -410,18 +402,19 @@ function erdp_create(erd, erdv)
 
     function update_property_box()
     {
-        if (object_selected)
+        console.log('objects_selected: ', objects_selected);
+
+        if (objects_selected.length == 0)
         {
-            show_object_props(object_selected);
+            show_erd_props();
+        }
+        else if (objects_selected.length == 1)
+        {
+            show_object_props(objects_selected[0]);
         }
         else
         {
             hide_props();
-
-            if (selection_rectangle == null)
-            {
-                show_erd_props();
-            }
         }
     }
 
