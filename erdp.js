@@ -133,22 +133,13 @@ function erdp_create(erd, erdv)
 
     function _move_objects(objects, mouse_x, mouse_y)
     {
-        // move objects
-        for (let i = 0; i < objects.length; i++)
-        {
-            const obj = objects[i];
-            const offset = offsets_from_mouse_of_objects_selected[i];
+        const coordinates = offsets_from_mouse_of_objects_selected.map(offset => {
             const tx = mouse_x + offset[0];
             const ty = mouse_y + offset[1];
-            if (obj['type'] == 'relationship_set')
-            {
-                erd_move_relationship_set(erd, obj, tx, ty)
-            }
-            else if (obj['type'] == 'entity_set')
-            {
-                erd_move_entity_set(erd, obj, tx, ty)
-            }
-        }
+            return [tx, ty];
+        })
+
+        erd_move_multiple_objects(erd, objects, coordinates);
     }
 
     erdv['on_canvas_mouse_up'] = function(x, y)

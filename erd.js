@@ -71,22 +71,55 @@ function erd_create_relationship_set(erd, x, y)
     return r;
 }
 
-function erd_move_relationship_set(erd, relationship_set, x, y)
+function erd_move_multiple_objects(erd, objects, coordinates)
 {
-    relationship_set['x'] = x;
-    relationship_set['y'] = y;
+    for (let i = 0; i < objects.length; i++)
+    {
+        objects[i]['x'] = coordinates[i][0];
+        objects[i]['y'] = coordinates[i][1];
+    }
 
-    _erd_reposition_relationship_set(erd, relationship_set);
-    
-    erd_layout_role_connection_lines(erd);
-}
+    let repositioned_obj = null;
+    let repositioned_obj_coord = null;
 
-function erd_move_entity_set(erd, entity_set, x, y)
-{
-    entity_set['x'] = x;
-    entity_set['y'] = y;
+    for (let i = 0; i < objects.length; i++)
+    {
+        const obj = objects[i];
+        const obj_type = obj['type'];
+        if (obj_type == 'relationship_set')
+        {
+            const new_coord = _erd_reposition_relationship_set(erd, obj, objects);
+            if (new_coord[0] != obj['x'] || new_coord[1] != obj['y'])
+            {
+                repositioned_obj = obj;
+                repositioned_obj_coord = new_coord;
+                break;
+            }
+        }
+        else
+        {
+            // entity_set
+            const new_coord = _erd_reposition_entity_set(erd, obj, objects);
+            if (new_coord[0] != obj['x'] || new_coord[1] != obj['y'])
+            {
+                repositioned_obj = obj;
+                repositioned_obj_coord = new_coord;
+                break;
+            }
+        }              
+    }
 
-    _erd_reposition_entity_set(erd, entity_set);
+    if (repositioned_obj)
+    {
+        const fix = [
+            repositioned_obj_coord[0] - repositioned_obj['x'], 
+            repositioned_obj_coord[1] - repositioned_obj['y']
+        ];
+        objects.forEach((obj) => {
+            obj['x'] += fix[0];
+            obj['y'] += fix[1];
+        });
+    }
 
     erd_layout_role_connection_lines(erd);
 }
@@ -95,10 +128,13 @@ function erd_move_entity_set(erd, entity_set, x, y)
  * Reposition the entity set when it is being moved
  * to try to make the role line horizontal or vertical
  */
-function _erd_reposition_entity_set(erd, entity_set)
+function _erd_reposition_entity_set(erd, entity_set, excludes = [])
 {
-    const related_relationship_sets = _erd_get_related_relationship_sets_of(erd, entity_set);
+    const related_relationship_sets = _erd_get_related_relationship_sets_of(erd, entity_set, excludes);
     console.log('related_relationship_sets: ', related_relationship_sets);
+
+    let new_x = entity_set['x'];
+    let new_y = entity_set['y'];
 
     for (let i = 0; i < related_relationship_sets.length; i++)
     {
@@ -108,17 +144,19 @@ function _erd_reposition_entity_set(erd, entity_set)
         const endpoints = _compute_role_endpoints_from_anchors(relationship_set, entity_set, anchors);
         const rp = endpoints['relationship_set_endpoint'];
         const ep = endpoints['entity_set_endpoint'];
-
+        
         if (Math.abs(rp['x'] - ep['x']) < 10)
         {
-            entity_set['x'] += (rp['x'] - ep['x'])
+            new_x = entity_set['x'] + (rp['x'] - ep['x']);
         }
 
         if (Math.abs(rp['y'] - ep['y']) < 10)
         {
-            entity_set['y'] += (rp['y'] - ep['y'])
+            new_y = entity_set['y'] + (rp['y'] - ep['y'])
         }
     }
+
+    return [new_x, new_y];
 }
 
 
@@ -126,9 +164,12 @@ function _erd_reposition_entity_set(erd, entity_set)
  * Reposition the relationship set when it is being moved
  * to try to make the role line horizontal or vertical
  */
-function _erd_reposition_relationship_set(erd, relationship_set)
+function _erd_reposition_relationship_set(erd, relationship_set, excludes = [])
 {
-    const related_entity_sets = _erd_get_related_entity_sets_of(erd, relationship_set);
+    const related_entity_sets = _erd_get_related_entity_sets_of(erd, relationship_set, excludes);
+
+    let new_x = relationship_set['x'];
+    let new_y = relationship_set['y'];
 
     related_entity_sets.forEach(entity_set => {
         const anchors = _compute_role_anchors(relationship_set, entity_set);
@@ -138,26 +179,31 @@ function _erd_reposition_relationship_set(erd, relationship_set)
 
         if (Math.abs(rp['x'] - ep['x']) < 10)
         {
-            relationship_set['x'] += (ep['x'] - rp['x'])
+            new_x = relationship_set['x'] + (ep['x'] - rp['x'])
         }
 
         if (Math.abs(rp['y'] - ep['y']) < 10)
         {
-            relationship_set['y'] += (ep['y'] - rp['y'])
+            new_y = relationship_set['y'] + (ep['y'] - rp['y'])
         }
-    })
+    });
+
+    return [new_x, new_y];
 }
 
-function _erd_get_related_relationship_sets_of(erd, entity_set)
+function _erd_get_related_relationship_sets_of(erd, entity_set, excludes = [])
 {
-    return erd['relationship_sets'].filter(
-        rel => rel['roles'].some(role => role['entity_set_id'] == entity_set['id']));
+    return erd['relationship_sets']
+    .filter(e => !excludes.includes(e))
+    .filter(rel => rel['roles'].some(role => role['entity_set_id'] == entity_set['id']));
 }
 
-function _erd_get_related_entity_sets_of(erd, relationship_set)
+function _erd_get_related_entity_sets_of(erd, relationship_set, excludes = [])
 {
     const related_entity_set_id_list = relationship_set['roles'].map(r => r['entity_set_id']);
-    return erd['entity_sets'].filter(e => related_entity_set_id_list.includes(e['id']));
+    return erd['entity_sets']
+            .filter(e => !excludes.includes(e))
+            .filter(e => related_entity_set_id_list.includes(e['id']));
 }
 
 
