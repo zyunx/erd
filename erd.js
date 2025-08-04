@@ -75,6 +75,8 @@ function erd_move_relationship_set(erd, relationship_set, x, y)
 {
     relationship_set['x'] = x;
     relationship_set['y'] = y;
+
+    _erd_reposition_relationship_set(erd, relationship_set);
     
     erd_layout_role_connection_lines(erd);
 }
@@ -84,8 +86,80 @@ function erd_move_entity_set(erd, entity_set, x, y)
     entity_set['x'] = x;
     entity_set['y'] = y;
 
+    _erd_reposition_entity_set(erd, entity_set);
+
     erd_layout_role_connection_lines(erd);
 }
+
+/*
+ * Reposition the entity set when it is being moved
+ * to try to make the role line horizontal or vertical
+ */
+function _erd_reposition_entity_set(erd, entity_set)
+{
+    const related_relationship_sets = _erd_get_related_relationship_sets_of(erd, entity_set);
+    console.log('related_relationship_sets: ', related_relationship_sets);
+
+    for (let i = 0; i < related_relationship_sets.length; i++)
+    {
+        const relationship_set = related_relationship_sets[i];
+        const anchors = _compute_role_anchors(relationship_set, entity_set);
+        console.log('anchors', anchors)
+        const endpoints = _compute_role_endpoints_from_anchors(relationship_set, entity_set, anchors);
+        const rp = endpoints['relationship_set_endpoint'];
+        const ep = endpoints['entity_set_endpoint'];
+
+        if (Math.abs(rp['x'] - ep['x']) < 10)
+        {
+            entity_set['x'] += (rp['x'] - ep['x'])
+        }
+
+        if (Math.abs(rp['y'] - ep['y']) < 10)
+        {
+            entity_set['y'] += (rp['y'] - ep['y'])
+        }
+    }
+}
+
+
+/*
+ * Reposition the relationship set when it is being moved
+ * to try to make the role line horizontal or vertical
+ */
+function _erd_reposition_relationship_set(erd, relationship_set)
+{
+    const related_entity_sets = _erd_get_related_entity_sets_of(erd, relationship_set);
+
+    related_entity_sets.forEach(entity_set => {
+        const anchors = _compute_role_anchors(relationship_set, entity_set);
+        const endpoints = _compute_role_endpoints_from_anchors(relationship_set, entity_set, anchors);
+        const rp = endpoints['relationship_set_endpoint'];
+        const ep = endpoints['entity_set_endpoint'];
+
+        if (Math.abs(rp['x'] - ep['x']) < 10)
+        {
+            relationship_set['x'] += (ep['x'] - rp['x'])
+        }
+
+        if (Math.abs(rp['y'] - ep['y']) < 10)
+        {
+            relationship_set['y'] += (ep['y'] - rp['y'])
+        }
+    })
+}
+
+function _erd_get_related_relationship_sets_of(erd, entity_set)
+{
+    return erd['relationship_sets'].filter(
+        rel => rel['roles'].some(role => role['entity_set_id'] == entity_set['id']));
+}
+
+function _erd_get_related_entity_sets_of(erd, relationship_set)
+{
+    const related_entity_set_id_list = relationship_set['roles'].map(r => r['entity_set_id']);
+    return erd['entity_sets'].filter(e => related_entity_set_id_list.includes(e['id']));
+}
+
 
 function erd_layout_role_connection_lines(erd)
 {
